@@ -1,16 +1,34 @@
 name: Create Starline
+run-name: "Create Starline for ${{ github.event.inputs.repository }}"
+
 on:
   workflow_dispatch:
     inputs:
       repository:
         required: true
 
+concurrency:
+  group: ${{ github.event.inputs.repository }}
+
 jobs:
-  create-spark:
+  create-starline:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
       - run: npm ci
 
       - run: node create-starline.js ${{ github.event.inputs.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIST_GITHUB_TOKEN: ${{ secrets.GIST_GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: starlines

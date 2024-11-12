@@ -1,3 +1,5 @@
+import {min_max} from "./lib/math.js";
+
 const height = 30
 const x0 = 5
 const y0 = 40
@@ -28,12 +30,10 @@ const pointOf = (x, y) => ({
     }
 })
 
-function bucketDates(dates, n) {
-    const startDate = Math.min(...dates);
-    const endDate = Math.max(...dates);
-    const totalRange = endDate - startDate;
+function bucketDates(now, dates, n) {
+    const {min: startDate, max: endDate} = min_max(dates);
+    const totalRange = now - startDate;
     const bucketSize = totalRange / n;
-
     const buckets = Array.from({length: n}, () => []);
     return dates.reduce((acc, date) => {
         const bucketIndex = Math.min(Math.floor((date - startDate) / bucketSize), n - 1);
@@ -42,18 +42,8 @@ function bucketDates(dates, n) {
     }, buckets);
 }
 
-function createTextSvg(text) {
-    return `<svg width="200" height="50" viewBox="0 0 210 50" xmlns="http://www.w3.org/2000/svg">
-    <text x="40" y="30">${text}</text>     
-</svg>`
-}
-
 export function createSvg(data) {
-    if (data.length <= steps) {
-        return createTextSvg('⭐️ not enough stars')
-    }
-
-    const yx = bucketDates(data, steps)
+    const yx = bucketDates(new Date(), data, steps)
         .map(bucket => bucket.length)
 
     const scale = Math.max(...yx) / height
@@ -85,12 +75,12 @@ export function createSvg(data) {
 
     return `<svg width="200" height="50" viewBox="0 0 210 50" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <linearGradient x1="0%" y1="0%" x2="100%" y2="0%" id="a">
+        <linearGradient id="stroke" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop stop-color="${gradient[0]}" offset="0%"/>
             <stop stop-color="${gradient[1]}" offset="100%"/>
         </linearGradient>
     </defs>
-    <path stroke="url(#a)"
+    <path stroke="url(#stroke)"
           stroke-width="3"
           stroke-linejoin="round"
           stroke-linecap="round"
@@ -98,5 +88,76 @@ export function createSvg(data) {
           fill="none"/>
     <circle r="4" cx="${p0.x}" cy="${p0.y}" fill="${gradient[0]}"/>
     <circle r="4" cx="${pN.x}" cy="${pN.y}" fill="${gradient[1]}"/>      
+</svg>`
+}
+
+export function createLoadingSvg() {
+    return `<svg width="200" height="50" viewBox="0 0 210 50"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <linearGradient id="stroke" x1="0" y1="0" x2="100%" y2="100%" gradientUnits="userSpaceOnUse">
+            <stop stop-color="${gradient[0]}" offset="0%"/>
+            <stop stop-color="${gradient[1]}" offset="100%"/>
+        </linearGradient>
+    </defs>
+    <g fill="url(#stroke)" stroke="none">
+        <circle cx="20%" cy="60%" r="3">
+            <animate
+                    attributeName="opacity"
+                    dur="4s"
+                    values="0;1;0"
+                    repeatCount="indefinite"
+                    begin="0.3"/>
+        </circle>
+        <circle cx="30%" cy="60%" r="3">
+            <animate
+                    attributeName="opacity"
+                    dur="4s"
+                    values="0;1;0"
+                    repeatCount="indefinite"
+                    begin="0.5"/>
+        </circle>
+        <circle cx="40%" cy="60%" r="3">
+            <animate
+                    attributeName="opacity"
+                    dur="4s"
+                    values="0;1;0"
+                    repeatCount="indefinite"
+                    begin="0.7"/>
+        </circle>
+        <circle cx="50%" cy="60%" r="3">
+            <animate
+                    attributeName="opacity"
+                    dur="4s"
+                    values="0;1;0"
+                    repeatCount="indefinite"
+                    begin="0.9"/>
+        </circle>
+        <circle cx="60%" cy="60%" r="3">
+            <animate
+                    attributeName="opacity"
+                    dur="4s"
+                    values="0;1;0"
+                    repeatCount="indefinite"
+                    begin="1.1"/>
+        </circle>
+        <circle cx="70%" cy="60%" r="3">
+            <animate
+                    attributeName="opacity"
+                    dur="4s"
+                    values="0;1;0"
+                    repeatCount="indefinite"
+                    begin="1.3"/>
+        </circle>
+        <circle cx="80%" cy="60%" r="3">
+            <animate
+                    attributeName="opacity"
+                    dur="4s"
+                    values="0;1;0"
+                    repeatCount="indefinite"
+                    begin="1.5"/>
+        </circle>
+    </g>
 </svg>`
 }

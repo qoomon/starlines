@@ -11,9 +11,12 @@
   "dependencies": {
     "@octokit/core": "^6.1.2",
     "@octokit/plugin-paginate-graphql": "^5.2.4",
+    "@octokit/plugin-paginate-rest": "^11.3.5",
     "@octokit/plugin-rest-endpoint-methods": "^13.2.6",
     "@octokit/plugin-throttling": "^9.3.2",
     "@octokit/rest": "^21.0.2",
-    "bson": "^6.9.0"
+    "@vercel/functions": "^1.5.0",
+    "bson": "^6.9.0",
+    "humanize-duration": "^3.32.1"
   }
 }

@@ -3,16 +3,11 @@ import {restEndpointMethods} from "@octokit/plugin-rest-endpoint-methods";
 import {paginateGraphQL} from "@octokit/plugin-paginate-graphql";
 import {throttling} from "@octokit/plugin-throttling";
 import {createSvg} from "./starline-svg.js";
+import humanizeDuration from "humanize-duration";
 import * as fs from "node:fs";
 import * as path from "node:path";
-
-const config = {
-    cache: 'github', // or 'github' or 'local'
-    starlineStoreRelease: {
-        ...parseRepository(process.env.GITHUB_REPOSITORY),
-        tag: 'starlines',
-    }
-}
+import {downloadGithubReleaseAsset, parseRepository, uploadGithubReleaseAsset} from "./lib/github.js";
+import starlineConfig from "./config.js";
 
 const input = {
     repository: process.argv[2]
@@ -23,292 +18,271 @@ const Octokit = _Octokit
     .plugin(restEndpointMethods)
     .plugin(paginateGraphQL);
 
-const octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN,
-    throttle: {
-        onRateLimit: (retryAfter, options, octokit, retryCount) => {
-            octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`,);
+const OctokitThrottle = {
+    onRateLimit: (retryAfter, options, octokit, retryCount) => {
+        octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`,);
 
-            if (retryCount < 1) {
-                // only retries once
-                octokit.log.info(`Retrying after ${retryAfter} seconds!`);
-                return true;
-            }
-        }, onSecondaryRateLimit: (retryAfter, options, octokit) => {
-            // does not retry, only logs a warning
-            octokit.log.warn(`SecondaryRateLimit detected for request ${options.method} ${options.url}`,);
-        },
+        if (retryCount < 1) {
+            // only retries once
+            octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+            return true;
+        }
+    }, onSecondaryRateLimit: (retryAfter, options, octokit) => {
+        // does not retry, only logs a warning
+        octokit.log.warn(`SecondaryRateLimit detected for request ${options.method} ${options.url}`,);
     },
-})
+}
+
+const octokit = new Octokit({auth: process.env.GITHUB_TOKEN, throttle: OctokitThrottle})
+const octokitGist = new Octokit({auth: process.env.GIST_GITHUB_TOKEN, throttle: OctokitThrottle})
+
+// --- main start -------------------------------------------------------------
 
 const stargazerDates = await getStargazerDates(input.repository)
 
-if (stargazerDates.newCount > 0) {
-    const svg = createSvg(stargazerDates.dates)
-    const svgFileName = `${input.repository}/starline.svg`
+console.log(`Create starline image...`)
+const svg = createSvg(stargazerDates.dates)
+const svgFileName = `${input.repository}/${starlineConfig.files.image.name}`
 
-    // local store
-    writeFileSyncRecursive(svgFileName, svg)
-    console.log('Saved: ' + svgFileName)
+// store image to local file system
+const svgFileNameLocal = 'starlines/' + svgFileName
+console.log('  Write to ' + svgFileNameLocal)
+writeFileSyncRecursive(svgFileNameLocal, svg)
 
-    // github release store
-    const svgAsset = await uploadGithubReleaseAsset({
-        ...config.starlineStoreRelease,
-        releaseTag: config.starlineStoreRelease.tag,
-        fileName: svgFileName, fileData: svg,
-    })
-    console.log('Uploaded: ' + svgAsset.browser_download_url)
-} else {
-    console.log('No new stargazers found. Nothing to do.')
-}
+// store image to GitHub release
+console.log(`  Upload to GitHub release ${starlineConfig.cache.releaseTag}`)
+await uploadGithubReleaseAsset({
+    ...starlineConfig.repository,
+    releaseTag: starlineConfig.cache.releaseTag,
+    fileName: svgFileName,
+    label: `Image   ${input.repository}`,
+    fileData: svg,
+    contentType: starlineConfig.files.image.contentType,
+    overwrite: true,
+})
 
-// --- Fetch Stargazer Dates --------------------------------------------------
+// --- main end ---------------------------------------------------------------
 
 async function getStargazerDates(repository) {
-    console.log('Load stargazer cache...' )
-    const repositoryObject = parseRepository(input.repository)
-    const cachedStargazerDates = await loadStargazerDates(repository)
-    const cachedStargazerUntilDate = cachedStargazerDates[0] || new Date(0)
-    console.log('Stargazer cache loaded.\n  ' + cachedStargazerDates.length + ' stargazers until ' + cachedStargazerUntilDate)
+    console.log(`Get ${repository} stargazers...`)
 
-    const newStargazerDates = []
-    let stargazersIterator
-    if (repositoryObject.type === 'gist') {  // gist stargazers
-        stargazersIterator = octokit.graphql.paginate.iterator(`
-            query paginate ($owner: String!, $gist: String!, $cursor: String) {
-              owner: user(login: $owner) {
-                repository: gist(name: $gist) {
-                  stargazers(first: 100, orderBy: {field:STARRED_AT, direction: DESC}, after: $cursor) {
-                    totalCount
-                    edges {
-                      starredAt
-                    }
-                    pageInfo {
-                      hasNextPage
-                      endCursor
-                    }
-                  }
-                }
-              }
-            }`, {
-            owner: repositoryObject.owner, gist: repositoryObject.repo,
-        })
-    } else { // repo stargazers
-        stargazersIterator = octokit.graphql.paginate.iterator(`
-            query paginate ($owner: String!, $repo: String!, $cursor: String) {
-              owner: repositoryOwner(login: $owner) {
-                repository(name: $repo) {
-                  stargazers(first: 100, orderBy: {field:STARRED_AT, direction: DESC}, after: $cursor) {
-                    totalCount
-                    edges {
-                      starredAt
-                    }
-                    pageInfo {
-                      hasNextPage
-                      endCursor
-                    }
-                  }
-                }   
-              }
-            }`, {
-            owner: repositoryObject.owner, repo: repositoryObject.repo,
-        })
+    if (repository.startsWith('users/')) {
+        let user = parseRepository(repository).repo
+        let cached = 0
+        let fetched = 0
+        let dates = []
+
+        const repositories = await getUserRepositories(user)
+        for (const repository of repositories) {
+            console.log(repository + '...')
+            const stargazerDates = await getStargazerDates(repository)
+            cached += stargazerDates.cached
+            fetched += stargazerDates.fetched
+            dates = dates.concat(stargazerDates.dates)
+        }
+        return {
+            cached,
+            fetched,
+            dates,
+        }
     }
 
-    for await (const response of stargazersIterator) {
-        const stargazersBatch = response.owner.repository.stargazers;
-        const starredAtDates = stargazersBatch.edges.map(({starredAt}) => new Date(starredAt))
+    console.log(`  Load stargazers cache...`)
+    const stargazerCache = await loadStargazerDates(repository)
+    if (stargazerCache.dates.length > 0) {
+        console.log(`    ${stargazerCache.dates.length} stargazers (latest: ${stargazerCache.dates[0].toISOString().split('T')[0]}`)
+    } else {
+        console.log(`    0 stargazers`)
+    }
 
-        let doneFetching = false
+    const repositoryObject = parseRepository(repository)
+    const fetchedStargazerDates = []
+
+    console.log(`  Fetch stargazers...`)
+    const stargazersIterator = getStargazerIterator(repositoryObject)
+    for await (const stargazersBatch of stargazersIterator) {
+        let stopIterating = false
+
+        const starredAtDates = stargazersBatch.edges.map(({starredAt}) => new Date(starredAt))
         for (const starredAtDate of starredAtDates) {
-            if (starredAtDate <= cachedStargazerUntilDate) {
-                doneFetching = true
+            if (starredAtDate <= stargazerCache.dates[0]) {
+                stopIterating = true
                 break;
             }
-            newStargazerDates.push(starredAtDate);
+            fetchedStargazerDates.push(starredAtDate);
         }
 
-        const fetchedStargazers = newStargazerDates.length;
-        const stargazersToFetch = stargazersBatch.totalCount - cachedStargazerDates.length;
-        const stargazersFetchProgress = stargazersToFetch > 0
-            ? fetchedStargazers / stargazersToFetch
-            : 1;
+        const fetchedStargazersCount = fetchedStargazerDates.length;
+        const stargazersToFetch = stargazersBatch.totalCount - (stargazerCache.dates?.length);
+        const stargazersFetchProgress = stargazersToFetch <= 0 ? 1
+            : fetchedStargazersCount / stargazersToFetch;
 
-        console.log('Progress: ' + (Math.round(stargazersFetchProgress * 100)) + '%' + ' (' + fetchedStargazers + '/' + stargazersToFetch + ')')
+        console.log(`    ${String(Math.round(stargazersFetchProgress * 100)).padStart(3, ' ')}%  (${String(fetchedStargazersCount).padStart(stargazersToFetch.toString().length, ' ')}/${stargazersToFetch})`)
 
-        if (doneFetching) {
+        if (stopIterating) {
             break;
         }
     }
 
-    const stargazerDates = [...newStargazerDates, ...cachedStargazerDates]
-    const stargazerUntilDate = cachedStargazerDates[0] || new Date(0)
-    if(newStargazerDates.length > 0) {
-        console.log('Store stargazer cache...')
+    const stargazerDates = fetchedStargazerDates.concat(stargazerCache.dates)
+    if (fetchedStargazerDates.length > 0) {
+        console.log(`  Store stargazers cache...`)
         await storeStargazerDates(repository, stargazerDates)
-        console.log('Stargazer cache stored.\n  ' + stargazerDates.length + 'stargazers until ' + stargazerUntilDate)
+        console.log(`    ${stargazerDates.length} stargazers (latest: ${stargazerDates[0].toISOString().split('T')[0]})`)
     }
 
     return {
+        cached: stargazerCache.dates.length,
+        fetched: fetchedStargazerDates.length,
         dates: stargazerDates,
-        newCount: newStargazerDates.length,
     }
 }
 
-// --- Stargazer Dates Store ---------------------------------------------------
+function getStargazerIterator(repositoryObject) {
+    if (repositoryObject.owner === 'gists') {
+        return wrapAsyncIteratorWithMapping(octokitGist.graphql.paginate.iterator(`
+                query paginate ($gist: String!, $cursor: String) {
+                  viewer {
+                    gist(name: $gist) {
+                      stargazers(first: 100, orderBy: {field:STARRED_AT, direction: DESC}, after: $cursor) {
+                        totalCount
+                        edges {
+                          starredAt
+                        }
+                        pageInfo {
+                          hasNextPage
+                          endCursor
+                        }
+                      }
+                    }
+                  }
+                }`, {
+            gist: repositoryObject.repo,
+        }), (res) => res.viewer.gist.stargazers)
+    }
+
+    return wrapAsyncIteratorWithMapping(octokit.graphql.paginate.iterator(`
+                query paginate ($owner: String!, $repo: String!, $cursor: String) {
+                  repositoryOwner(login: $owner) {
+                    repository(name: $repo) {
+                      stargazers(first: 100, orderBy: {field:STARRED_AT, direction: DESC}, after: $cursor) {
+                        totalCount
+                        edges {
+                          starredAt
+                        }
+                        pageInfo {
+                          hasNextPage
+                          endCursor
+                        }
+                      }
+                    }   
+                  }
+                }`, {
+        owner: repositoryObject.owner, repo: repositoryObject.repo,
+    }), (res) => res.repositoryOwner.repository.stargazers)
+}
+
+async function getUserRepositories(user) {
+    let result = []
+
+    const repositories = await octokit.graphql.paginate(`
+        query paginate ($owner: String!, $cursor: String) {
+          repositoryOwner(login: $owner) {
+            repositories(first: 100, after: $cursor) {
+              nodes {
+                name
+              }
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+            } 
+          }
+        }`, {
+        owner: user,
+    }).then((data) => data.repositoryOwner.repositories.nodes.map(({name}) => `${owner}/${name}`))
+
+    result = result.concat(repositories)
+
+    const gists = await octokitGist.graphql.paginate(`
+        query paginate ($user: String!, $cursor: String) {
+          user(login: $user) {
+            gists(first: 100, after: $cursor) {
+              nodes {
+                name
+              }
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+            }
+          }
+        }`, {
+        user,
+    }).then((data) => data.user.gists.nodes.map(({name}) => `gists/${name}`))
+
+    result = result.concat(gists)
+
+    return result
+}
+
+// --- Stargazer Store ---------------------------------------------------
 
 async function storeStargazerDates(repository, dates) {
-    const fileName = `${repository}/stargazer-dates.json`
-
-    // local file store
+    const fileName = `${repository}/${starlineConfig.files.dates.name}`
     let fileData = dates.map((date) => date.getTime())
     fileData = JSON.stringify(fileData)
-    writeFileSyncRecursive(fileName, fileData)
+
+    // local file store
+    writeFileSyncRecursive('starlines/' + fileName, fileData)
 
     // github release store
     await uploadGithubReleaseAsset({
-        ...config.starlineStoreRelease,
-        releaseTag: config.starlineStoreRelease.tag,
-        fileName, fileData,
+        ...starlineConfig.repository,
+        releaseTag: starlineConfig.cache.releaseTag,
+        fileName,
+        label: `Cache   ${repository}`,
+        fileData,
+        contentType: starlineConfig.files.dates.contentType,
+        overwrite: true,
     })
 }
 
 /**
  * Load dates
  * @param repository
- * @returns {Promise<Date[]>}
+ * @returns {Promise<{dates: Date[], age: number}>}
  */
 async function loadStargazerDates(repository) {
-    const fileName = `${repository}/stargazer-dates.json`
-
-    let fileBuffer
-
-    if (config.cache === 'github') {
-        // github release store
-        fileBuffer = await downloadGithubReleaseAsset({
-            ...config.starlineStoreRelease,
-            releaseTag: config.starlineStoreRelease.tag,
-            fileName,
-        })
-    } else {
-        // local file store
-        if (!fs.existsSync(fileName)) {
-            return []
+    const asset = await downloadGithubReleaseAsset({
+        ...starlineConfig.repository,
+        releaseTag: starlineConfig.cache.releaseTag,
+        fileName: `${repository}/${starlineConfig.files.dates.name}`,
+    })
+    if (!asset) {
+        return {
+            dates: [],
+            age: Infinity,
         }
-        fileBuffer = fs.readFileSync(fileName)
     }
 
-    return fileBuffer
-        ? JSON.parse(fileBuffer)
-            .map((date) => new Date(date))
-        : []
-}
-
-async function uploadGithubReleaseAsset({owner, repo, releaseTag, fileName, fileData}) {
-    const release = await octokit.rest.repos.getReleaseByTag({
-        owner, repo, tag: releaseTag,
-    }).then(({data}) => data)
-
-    const releaseAssetName = fileName.replaceAll('/', '.')
-
-    const assetId = await getGithubReleaseAssetId({
-        owner, repo, releaseTag,
-        assetName: releaseAssetName,
-    })
-    if (assetId) {
-        // delete asset
-        await octokit.rest.repos.deleteReleaseAsset({
-            owner, repo, asset_id: assetId,
-        })
+    return {
+        dates: JSON.parse(asset.data).map((date) => new Date(date)),
+        age: parseInt(asset.age),
     }
-
-    // upload
-    return await octokit.rest.repos.uploadReleaseAsset({
-        owner, repo, release_id: release.id,
-        name: releaseAssetName, data: fileData,
-        headers: {
-            'content-type': 'image/svg+xml',
-            'content-length': fileData.length,
-        },
-        mediaType: {
-            format: 'raw',
-            previews: [],
-        }
-    })
-}
-
-async function downloadGithubReleaseAsset({owner, repo, releaseTag, fileName}) {
-    const release = await octokit.rest.repos.getReleaseByTag({
-        owner, repo, tag: releaseTag,
-    }).then(({data}) => data)
-
-    const releaseAssetName = fileName.replaceAll('/', '.')
-
-    const assetId = await getGithubReleaseAssetId({
-        owner, repo, releaseTag,
-        assetName: releaseAssetName,
-    })
-    if (!assetId) {
-        return
-    }
-
-    // download
-    return await octokit.rest.repos.getReleaseAsset({
-        owner, repo, release_id: release.id,
-        asset_id: assetId,
-    }).then(({data}) => fetch(data.browser_download_url))
-        .then(res => res.arrayBuffer())
-        .then(arrayBuffer => Buffer.from(arrayBuffer))
-}
-
-async function getGithubReleaseAssetId({owner, repo, releaseTag, assetName}) {
-    const release = await octokit.rest.repos.getReleaseByTag({
-        owner, repo, tag: releaseTag,
-    }).then(({data}) => data)
-
-    // TODO improve
-    return await octokit.rest.repos.listReleaseAssets({
-        owner, repo, release_id: release.id,
-    }).then(({data}) => data.find(({name}) => name === assetName)?.id)
-
-    return await octokit.graphql(`
-        query ($owner: String!, $repo: String!, $releaseTag: String!, $assetName: String!) {
-            owner: repositoryOwner(login: $owner) {
-                repository(name: $repo) {
-                    release(tagName: $releaseTag) {
-                        assets: releaseAssets(first: 1, name: $assetName) {
-                            nodes {
-                                id
-                                name
-                            }
-                        }
-                    }
-                }
-            }
-        }`, {
-        owner, repo, releaseTag, assetName
-    }).then(({data}) => data.owner.repository.release.assets.nodes[0]?.id)
 }
 
 // --- Utils -------------------------------------------------------------------
-
-function lastElement(array) {
-    return array[array.length - 1]
-}
 
 function writeFileSyncRecursive(filename, content = '') {
     fs.mkdirSync(path.dirname(filename), {recursive: true})
     fs.writeFileSync(filename, content)
 }
 
-function parseRepository(input) {
-    let type = 'repository'
-    if (input.endsWith('@gist')) {
-        type = 'gist'
-        input = input.replace(/@gist$/, '')
+async function* wrapAsyncIteratorWithMapping(asyncIterator, mapFn) {
+    for await (const value of asyncIterator) {
+        yield await mapFn(value);
     }
-
-    const [owner, repo] = input.split('/')
-    return {owner, repo, type}
 }
+
 

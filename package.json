@@ -1,0 +1,19 @@
+{
+  "name": "github-playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sandbox.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true,
+  "dependencies": {
+    "@octokit/core": "^6.1.2",
+    "@octokit/plugin-paginate-graphql": "^5.2.4",
+    "@octokit/plugin-rest-endpoint-methods": "^13.2.6",
+    "@octokit/plugin-throttling": "^9.3.2",
+    "@octokit/rest": "^21.0.2",
+    "bson": "^6.9.0"
+  }
+}

@@ -15,6 +15,10 @@ Automatically generated GitHub Starline badges for your GitHub Repositories and 
 ```md
 [![starline](https://github-starline.vercel.app/gists/GIST)](https://github.com/qoomon/starline)
 ```
+### For GitHub Users
+```md
+[![starline](https://github-starline.vercel.app/users/USER)](https://github.com/qoomon/starline)
+```
 
 ## Starline Cache
 [GitHub Starlines Release](https://github.com/qoomon/starline/releases/tag/starlines)

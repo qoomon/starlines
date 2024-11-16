@@ -1,4 +1,4 @@
-# Starline
+# Starline [![starline](https://github-starline.vercel.app/qoomon/starline)](https://github.com/qoomon/starline)
 
 Dynamically generated GitHub stargazer history badges.
 

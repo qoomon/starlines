@@ -1,6 +1,6 @@
 # Starline
 
-Automatically generated GitHub Starline badges for your GitHub Repositories and Gists.
+Dynamically generated GitHub stargazer history badges.
 
 ## Example
 [![starline](https://github-starline.vercel.app/gists/5dfcdf8eec66a051ecd85625518cfd13)](https://github.com/qoomon/starline)

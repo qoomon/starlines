@@ -6,6 +6,8 @@ Dynamically generated GitHub stargazer history badges.
 [![starline](https://github-starline.vercel.app/gists/5dfcdf8eec66a051ecd85625518cfd13)](https://github.com/qoomon/starline)
 
 ## Usage
+> [!NOTE]  
+> It can take come time until the image is ready, depending on the amount of stargazers to fetch and process.
 
 ### For GitHub Repositories
 ```md

@@ -3,7 +3,7 @@
 Automatically generated GitHub Starline badges for your GitHub Repositories and Gists.
 
 ## Example
-[![starline](https://github-starline.vercel.app/gist/5dfcdf8eec66a051ecd85625518cfd13)](https://github.com/qoomon/starline)
+[![starline](https://github-starline.vercel.app/gists/5dfcdf8eec66a051ecd85625518cfd13)](https://github.com/qoomon/starline)
 
 ## Usage
 
@@ -13,7 +13,7 @@ Automatically generated GitHub Starline badges for your GitHub Repositories and 
 ```
 ### For GitHub Gists
 ```md
-[![starline](https://github-starline.vercel.app/gist/GIST)](https://github.com/qoomon/starline)
+[![starline](https://github-starline.vercel.app/gists/GIST)](https://github.com/qoomon/starline)
 ```
 
 ## Starline Cache

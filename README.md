@@ -7,7 +7,7 @@ Dynamically generated GitHub stargazer history badges.
 
 ## Usage
 > [!NOTE]  
-> It can take come time until the image is ready, depending on the amount of stargazers to fetch and process.<br>
+> It can take some time until the image is ready, depending on the amount of stargazers to fetch and process.<br>
 > If you are eager to watch the image generation workflows progress jump to [workflow runs](https://github.com/qoomon/starline/actions/workflows/create-starline.yaml).
 
 ### For GitHub Repositories

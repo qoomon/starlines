@@ -200,7 +200,7 @@ async function getUserRepositories(user) {
           }
         }`, {
         owner: user,
-    }).then((data) => data.repositoryOwner.repositories.nodes.map(({name}) => `${owner}/${name}`))
+    }).then((data) => data.repositoryOwner.repositories.nodes.map(({name}) => `${user}/${name}`))
 
     result = result.concat(repositories)
 

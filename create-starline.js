@@ -90,7 +90,7 @@ async function getStargazerDates(repository) {
     console.log(`  Load stargazers cache...`)
     const stargazerCache = await loadStargazerDates(repository)
     if (stargazerCache.dates.length > 0) {
-        console.log(`    ${stargazerCache.dates.length} stargazers (latest: ${stargazerCache.dates[0].toISOString().split('T')[0]}`)
+        console.log(`    ${stargazerCache.dates.length} stargazers (latest: ${stargazerCache.dates[0].toISOString().split('T')[0]})`)
     } else {
         console.log(`    0 stargazers`)
     }

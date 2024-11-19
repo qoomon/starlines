@@ -28,7 +28,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIST_GITHUB_TOKEN: ${{ secrets.GIST_GITHUB_TOKEN }}
-
+      
+      - name: Add starline to step summary
+        run: echo '[![starline](https://github-starline.vercel.app/${{ github.event.inputs.repository }}](https://github.com/qoomon/starline/releases/tag/starlines)' >> $GITHUB_STEP_SUMMARY
+    
       - uses: actions/upload-artifact@v4
         with:
           path: starlines

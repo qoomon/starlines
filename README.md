@@ -20,7 +20,7 @@ Dynamically generated GitHub stargazer history badges.
 ```
 ### For GitHub Users
 ```md
-[![starline](https://starlines.qoo.monster/assets/users/USER)](https://github.com/qoomon/starline)
+[![starline](https://starlines.qoo.monster/assets/USER)](https://github.com/qoomon/starline)
 ```
 
 ## Starline Cache

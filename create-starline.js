@@ -3,7 +3,6 @@ import {restEndpointMethods} from "@octokit/plugin-rest-endpoint-methods";
 import {paginateGraphQL} from "@octokit/plugin-paginate-graphql";
 import {throttling} from "@octokit/plugin-throttling";
 import {createSvg} from "./starline-svg.js";
-import humanizeDuration from "humanize-duration";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import {downloadGithubReleaseAsset, parseRepository, uploadGithubReleaseAsset} from "./lib/github.js";
@@ -188,7 +187,7 @@ async function getUserRepositories(user) {
     const repositories = await octokit.graphql.paginate(`
         query paginate ($owner: String!, $cursor: String) {
           repositoryOwner(login: $owner) {
-            repositories(first: 100, after: $cursor) {
+            repositories(ownerAffiliations:[OWNER], first: 100, after: $cursor) {
               nodes {
                 name
               }

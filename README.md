@@ -1,9 +1,9 @@
-# Starline [![starline](https://github-starline.vercel.app/qoomon/starline)](https://github.com/qoomon/starline)
+# GitHub Starlines [![starline](https://starlines.qoo.monster/assets/qoomon/starline)](https://github.com/qoomon/starline)
 
 Dynamically generated GitHub stargazer history badges.
 
 ## Example
-[![starline](https://github-starline.vercel.app/gists/5dfcdf8eec66a051ecd85625518cfd13)](https://github.com/qoomon/starline)
+[![starline](https://starlines.qoo.monster/assets/gists/5dfcdf8eec66a051ecd85625518cfd13)](https://github.com/qoomon/starline)
 
 ## Usage
 > [!NOTE]  
@@ -12,15 +12,15 @@ Dynamically generated GitHub stargazer history badges.
 
 ### For GitHub Repositories
 ```md
-[![starline](https://github-starline.vercel.app/OWNER/REPO)](https://github.com/qoomon/starline)
+[![starline](https://starlines.qoo.monster/assets/OWNER/REPO)](https://github.com/qoomon/starline)
 ```
 ### For GitHub Gists
 ```md
-[![starline](https://github-starline.vercel.app/gists/GIST)](https://github.com/qoomon/starline)
+[![starline](https://starlines.qoo.monster/assets/gists/GIST)](https://github.com/qoomon/starline)
 ```
 ### For GitHub Users
 ```md
-[![starline](https://github-starline.vercel.app/users/USER)](https://github.com/qoomon/starline)
+[![starline](https://starlines.qoo.monster/assets/users/USER)](https://github.com/qoomon/starline)
 ```
 
 ## Starline Cache

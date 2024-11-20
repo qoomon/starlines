@@ -1,4 +1,7 @@
+[build]
+    edge_functions = "api"
+
 [[redirects]]
-from = "/*"
-to = "/.netlify/functions/:splat"
-status = 200
+    from = "/"
+    to = "https://github.com/qoomon/starlines"
+

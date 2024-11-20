@@ -3,7 +3,7 @@ import {parseRepository} from "./lib/github.js";
 export default  {
     repository: {
         owner: 'qoomon',
-        repo: 'starline',
+        repo: 'starlines',
     },
     cache: {
         releaseTag: 'starlines',

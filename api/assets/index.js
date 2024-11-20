@@ -1,54 +1,52 @@
-import { waitUntil } from "@vercel/functions";
 import {Octokit as _Octokit} from "@octokit/core";
 import {restEndpointMethods} from "@octokit/plugin-rest-endpoint-methods";
-import {createLoadingSvg} from "../starline-svg.js";
-import {downloadGithubReleaseAsset, parseRepository, repositoryExists} from "../lib/github.js";
-import starlineConfig from "../config.js";
+import {createLoadingSvg} from "../../starline-svg.js";
+import {downloadGithubReleaseAsset, repositoryExists} from "../../lib/github.js";
+import starlineConfig from "../../config.js";
 
 const Octokit = _Octokit.plugin(restEndpointMethods)
-
-export const config = {
-    runtime: 'edge'
-}
 
 const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
 })
 
-export default async (request, response) => {
+// TODO try On-demand Builders
+
+export const config = {
+    path: "/assets/*",
+    cache: "manual",
+};
+
+/**
+ * @param request {Request}
+ * @param context {import("@netlify/functions").Context}
+ * @returns {Promise<Response>}
+ */
+export default async (request, context) => {
     switch (request.method) {
         case 'GET':
-            return await GET(request, response);
+            return await GET(request, context);
         default:
-            return response.status(405)
-                .send({error: 'Method not allowed'});
+            new Response('Method not allowed', {
+                status: 405,
+            })
     }
 };
 
-async function GET(request) {
-    const requestUrl = new URL(request.url)
-    if (requestUrl.pathname === '/') {
-        return new Response('Starline API', {
-            status: 308,
-            headers: {
-                'Location': `https://github.com/${starlineConfig.repository.owner}/${starlineConfig.repository.repo}`,
-                'Cache-Control': 'public, max-age=0, s-maxage=604800'
-            }
-        })
+/**
+ * @param request {Request}
+ * @param context
+ * @returns {Promise<Response>}
+ */
+export
+async function GET(request, context) {
+    let sourceRepository = context.params['0']
+    if (sourceRepository.split('/').length === 1) {
+        sourceRepository = 'users/' + sourceRepository
     }
-
-    const sourceRepository = requestUrl.pathname.replace(/^\//, '')
-    if (sourceRepository.split('/').length !== 2) {
-        return new Response('Invalid repository', {
-            status: 400,
-            headers: {
-                'Cache-Control': 'public, max-age=0, s-maxage=604800'
-            }
-        })
-    }
-    const sourceRepositoryObject = parseRepository(sourceRepository)
-    if (!await repositoryExists(sourceRepositoryObject)) {
-        return new Response('Not found', {
+    if (sourceRepository.split('/').length !== 2 || !await repositoryExists(sourceRepository)) {
+        return new Response('Not found'
+            + '\n' + JSON.stringify(context.params, null, 2), {
             status: 404,
             headers: {
                 'Cache-Control': 'public, max-age=0, s-maxage=60'
@@ -64,7 +62,7 @@ async function GET(request) {
 
     if (!starlineImage) {
         console.log('Create starline image...')
-        waitUntil(triggerStarlineWorkflow(sourceRepository))
+        await triggerStarlineWorkflow(sourceRepository)
 
         const svg = createLoadingSvg()
         return new Response(svg, {
@@ -78,7 +76,7 @@ async function GET(request) {
         let cacheMaxAge = starlineConfig.cache.maxAge
         if (starlineImage.age > cacheMaxAge) {
             console.log('Refresh starline image...')
-            waitUntil(triggerStarlineWorkflow(sourceRepository))
+            await triggerStarlineWorkflow(sourceRepository)
             cacheMaxAge = starlineConfig.cache.maxAgeAfterTrigger
         }
 

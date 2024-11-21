@@ -59,8 +59,8 @@ export function createSvg(data) {
     const p0 = pointOf(x0, y0)
     const p1 = points[0]
     const p2 = points[1]
-    const c1 = p1.sub(p0).unit().add(p2)
-    const c2 = p0.sub(p2).unit().add(p1)
+    const c1 = p0.add(p1.sub(p0).unit())
+    const c2 = p1.add(p0.sub(p2).unit())
     let path = `M${p0} C ${c1}, ${c2}, ${p1}`
 
     for (let i = 1; i < points.length; i++) {

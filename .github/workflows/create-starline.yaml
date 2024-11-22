@@ -27,10 +27,9 @@ jobs:
       - name: Add starline to step summary
         run: |
           target='${{ github.event.inputs.repository }}'
-          if [[ $target == users/* ]]
-          then
+          if [[ $target == users/* ]]; then
             echo "[$target](https://github.com/${target#users/})" >> $GITHUB_STEP_SUMMARY
-          elif [[ $target == gists/* ]]
+          elif [[ $target == gists/* ]]; then
             echo "[$target](https://gist.github.com/${target#gists/})" >> $GITHUB_STEP_SUMMARY
           else
             echo "[$target](https://github.com/$target)" >> $GITHUB_STEP_SUMMARY

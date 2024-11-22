@@ -24,6 +24,17 @@ jobs:
 
       - run: npm ci
 
+      - name: Add starline to step summary
+        run: |
+          target='${{ github.event.inputs.repository }}'
+          if [[ $target == users/* ]]
+          then
+            echo "[$target](https://github.com/${target#users/})" >> $GITHUB_STEP_SUMMARY
+          elif [[ $target == gists/* ]]
+            echo "[$target](https://gist.github.com/${target#gists/})" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "[$target](https://github.com/$target)' >> $GITHUB_STEP_SUMMARY
+          fi
       - run: node create-starline.js ${{ github.event.inputs.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

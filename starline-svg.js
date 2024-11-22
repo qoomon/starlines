@@ -34,7 +34,7 @@ function bucketDates(now, dates, n) {
     const {min: mintDate, max: maxDate} = min_max(dates);
     const buckets = Array.from({length: n}, () => []);
     return dates.reduce((acc, date) => {
-        const bucketIndex = getLogarithmicIndex(mintDate, maxDate, n, date);
+        const bucketIndex = getLinearIndex(mintDate, maxDate, n, date);
         acc[bucketIndex].push(date);
         return acc;
     }, buckets);

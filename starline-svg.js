@@ -31,15 +31,36 @@ const pointOf = (x, y) => ({
 })
 
 function bucketDates(now, dates, n) {
-    const {min: startDate, max: endDate} = min_max(dates);
-    const totalRange = now - startDate;
-    const bucketSize = totalRange / n;
+    const {min: mintDate, max: maxDate} = min_max(dates);
     const buckets = Array.from({length: n}, () => []);
     return dates.reduce((acc, date) => {
-        const bucketIndex = Math.min(Math.floor((date - startDate) / bucketSize), n - 1);
+        const bucketIndex = getLogarithmicIndex(mintDate, maxDate, n, date);
         acc[bucketIndex].push(date);
         return acc;
     }, buckets);
+
+    function getLogarithmicIndex(min, max, segmentCount, value) {
+        const logXStart = 1
+        const logXEnd = 10
+        const logXLength = logXEnd - logXStart
+
+        const logYStart = Math.log(logXStart)
+        const logYEnd = Math.log(logXEnd)
+        const logYLength = logYEnd - logYStart
+
+        const relativeXValue = (value - min) / (max - min)
+        const logXValue = logXEnd - (logXLength * relativeXValue)
+        const logYValue = Math.log(logXValue) - logYStart
+        const relativeYValue =  logYValue / logYLength
+
+        return Math.round((1 - relativeYValue) * (segmentCount - 1))
+    }
+
+    function getLinearIndex(min, max, segmentCount, value) {
+        const length = max - min
+        const relativeValue = (value - min) / length
+        return Math.round(relativeValue * (segmentCount - 1))
+    }
 }
 
 export function createSvg(data) {
@@ -161,3 +182,4 @@ export function createLoadingSvg() {
     </g>
 </svg>`
 }
+

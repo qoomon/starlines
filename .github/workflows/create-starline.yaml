@@ -33,7 +33,7 @@ jobs:
           elif [[ $target == gists/* ]]
             echo "[$target](https://gist.github.com/${target#gists/})" >> $GITHUB_STEP_SUMMARY
           else
-            echo "[$target](https://github.com/$target)' >> $GITHUB_STEP_SUMMARY
+            echo "[$target](https://github.com/$target)" >> $GITHUB_STEP_SUMMARY
           fi
       - run: node create-starline.js ${{ github.event.inputs.repository }}
         env:

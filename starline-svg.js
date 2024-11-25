@@ -31,15 +31,36 @@ const pointOf = (x, y) => ({
 })
 
 function bucketDates(now, dates, n) {
-    const {min: mintDate, max: maxDate} = min_max(dates);
-    const buckets = Array.from({length: n}, () => []);
-    return dates.reduce((acc, date) => {
-        const bucketIndex = getLinearIndex(mintDate, maxDate, n, date);
-        acc[bucketIndex].push(date);
-        return acc;
-    }, buckets);
+    const {min: minDate, max: maxDate} = min_max(dates.map(date => date.getTime()));
 
-    function getLogarithmicIndex(min, max, segmentCount, value) {
+    const bucketRanges = getLogarithmicRanges(minDate, maxDate, n)
+    // const bucketRanges = getLinearRanges(minDate, maxDate, n)
+
+    const lastRange = getRange(bucketRanges, n - 1)
+
+    return dates.reduce((acc, date) => {
+            const index = findIndex(bucketRanges, date.getTime())
+            acc[index]++;
+            return acc;
+        }, new Array(n).fill(0))
+        .map((value, index) => value / getRange(bucketRanges, index) * lastRange)
+
+    function getRange(array, index) {
+        if(index >= array.length) {
+            throw new Error('Index out of range')
+        }
+        return  array[index] - array[index +1]
+    }
+
+    function findIndex(array, value) {
+        if(value < array[0] || value > array[array.length - 1]) {
+            throw new Error('Value out of range')
+        }
+
+        return array.findIndex((element) =>  value < element) - 1
+    }
+
+    function getLogarithmicRanges(min, max, segmentCount) {
         const logXStart = 1
         const logXEnd = 10
         const logXLength = logXEnd - logXStart
@@ -48,25 +69,33 @@ function bucketDates(now, dates, n) {
         const logYEnd = Math.log(logXEnd)
         const logYLength = logYEnd - logYStart
 
-        const relativeXValue = (value - min) / (max - min)
-        const logXValue = logXEnd - (logXLength * relativeXValue)
-        const logYValue = Math.log(logXValue) - logYStart
-        const relativeYValue =  logYValue / logYLength
+        const ranges = [max]
+        for (let segmentIndex = 0; segmentIndex <= segmentCount - 1; segmentIndex++) {
+            const relativeXValue = (segmentIndex + 1) / segmentCount
+            const logXValue = logXEnd - (logXLength * relativeXValue)
+            const logYValue = Math.log(logXValue) - logYStart
+            const relativeYValue = logYValue / logYLength
 
-        return Math.round((1 - relativeYValue) * (segmentCount - 1))
+            ranges.push(min + (max - min) * relativeYValue)
+        }
+
+        return ranges.reverse()
     }
 
-    function getLinearIndex(min, max, segmentCount, value) {
-        const length = max - min
-        const relativeValue = (value - min) / length
-        return Math.round(relativeValue * (segmentCount - 1))
+
+
+    function getLinearRanges(min, max, segmentCount) {
+        const ranges = []
+        for (let segmentIndex = 0; segmentIndex <= segmentCount ; segmentIndex++) {
+            ranges.push(min + (max - min) / segmentCount * segmentIndex)
+        }
+        return ranges
     }
 }
 
 export function createSvg(data) {
     const yx = bucketDates(new Date(), data, steps)
-        .map(bucket => bucket.length)
-
+    console.log("yx", yx)
     const scale = Math.max(...yx) / height
 
     const points = []

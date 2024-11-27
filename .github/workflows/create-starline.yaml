@@ -40,8 +40,10 @@ jobs:
           GIST_GITHUB_TOKEN: ${{ secrets.GIST_GITHUB_TOKEN }}
       
       - name: Add starline to step summary
-        run: echo '[![starline](https://starlines.qoo.monster/assets/${{ github.event.inputs.repository }})](https://github.com/qoomon/starline/releases/tag/starlines)' >> $GITHUB_STEP_SUMMARY
+        run: echo "[![starline](https://starlines.qoo.monster/assets/${ASSET})](https://github.com/qoomon/starlines/releases/download/starlines/${ASSET/\//--}--starline.svg)" >> $GITHUB_STEP_SUMMARY
+        env:
+          ASSET: ${{ github.event.inputs.repository }}
     
       - uses: actions/upload-artifact@v4
         with:
-          path: starlines
+          path: starlines/${{ github.event.inputs.repository }}/starline.svg

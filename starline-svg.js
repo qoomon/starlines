@@ -95,7 +95,6 @@ function bucketDates(now, dates, n) {
 
 export function createSvg(data) {
     const yx = bucketDates(new Date(), data, steps)
-    console.log("yx", yx)
     const scale = Math.max(...yx) / height
 
     const points = []

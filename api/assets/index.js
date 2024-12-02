@@ -44,9 +44,18 @@ async function GET(request, context) {
     if (sourceRepository.split('/').length === 1) {
         sourceRepository = 'users/' + sourceRepository
     }
-    if (sourceRepository.split('/').length !== 2 || !await repositoryExists(sourceRepository)) {
-        return new Response('Not found'
-            + '\n' + JSON.stringify(context.params, null, 2), {
+
+    if (sourceRepository.split('/').length !== 2) {
+        return new Response('Bad request', {
+            status: 400,
+            headers: {
+                'Cache-Control': `public, max-age=0, s-maxage=${starlineConfig.cache.maxAge}`
+            }
+        })
+    }
+
+    if (!await repositoryExists(sourceRepository)) {
+        return new Response('Not found', {
             status: 404,
             headers: {
                 'Cache-Control': 'public, max-age=0, s-maxage=60'
@@ -64,12 +73,12 @@ async function GET(request, context) {
         console.log('Create starline image...')
         await triggerStarlineWorkflow(sourceRepository)
 
-        const svg = createLoadingSvg()
-        return new Response(svg, {
+        const loadingSvg = createLoadingSvg()
+        return new Response(loadingSvg, {
             status: 202,
             headers: {
                 'Content-Type': starlineConfig.files.image.contentType,
-                'Cache-Control': `public, max-age=0, s-maxage=${starlineConfig.cache.maxAgeAfterTrigger}`
+                'Cache-Control': `public, max-age=0, s-maxage=${starlineConfig.cache.maxAgeAfterTrigger}`,
             }
         })
     }
@@ -78,6 +87,7 @@ async function GET(request, context) {
     if (starlineImage.age > cacheMaxAge) {
         console.log('Refresh starline image...')
         await triggerStarlineWorkflow(sourceRepository)
+
         cacheMaxAge = starlineConfig.cache.maxAgeAfterTrigger
     }
 

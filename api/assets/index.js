@@ -83,8 +83,8 @@ async function GET(request, context) {
         })
     }
 
-    let cacheMaxAge = starlineConfig.cache.maxAge
-    if (starlineImage.age > cacheMaxAge) {
+    let cacheMaxAge = starlineConfig.cache.maxAge - starlineImage.age
+    if (cacheMaxAge <= 0) {
         console.log('Refresh starline image...')
         await triggerStarlineWorkflow(sourceRepository)
 
@@ -95,7 +95,7 @@ async function GET(request, context) {
         status: 200,
         headers: {
             'Content-Type': starlineConfig.files.image.contentType,
-            'Last-Modified': starlineImage.lastModified,
+            'Last-Modified': starlineImage.lastModified.toUTCString(),
             'Cache-Control': `public, max-age=0, s-maxage=${cacheMaxAge}`,
         }
     })

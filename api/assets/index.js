@@ -72,22 +72,24 @@ async function GET(request, context) {
                 'Cache-Control': `public, max-age=0, s-maxage=${starlineConfig.cache.maxAgeAfterTrigger}`
             }
         })
-    } else {
-        let cacheMaxAge = starlineConfig.cache.maxAge
-        if (starlineImage.age > cacheMaxAge) {
-            console.log('Refresh starline image...')
-            await triggerStarlineWorkflow(sourceRepository)
-            cacheMaxAge = starlineConfig.cache.maxAgeAfterTrigger
-        }
-
-        return new Response(starlineImage.data, {
-            status: 200,
-            headers: {
-                'Content-Type': starlineConfig.files.image.contentType,
-                'Cache-Control': `public, max-age=0, s-maxage=${cacheMaxAge}`
-            }
-        })
     }
+
+    let cacheMaxAge = starlineConfig.cache.maxAge
+    if (starlineImage.age > cacheMaxAge) {
+        console.log('Refresh starline image...')
+        await triggerStarlineWorkflow(sourceRepository)
+        cacheMaxAge = starlineConfig.cache.maxAgeAfterTrigger
+    }
+
+    return new Response(starlineImage.data, {
+        status: 200,
+        headers: {
+            'Content-Type': starlineConfig.files.image.contentType,
+            'Cache-Control': `public, max-age=0, s-maxage=${cacheMaxAge}`,
+            'Age': starlineImage.age,
+        }
+    })
+
 }
 
 async function triggerStarlineWorkflow(repository) {

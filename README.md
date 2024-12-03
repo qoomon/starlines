@@ -1,4 +1,4 @@
-# GitHub Starlines [![starline](https://starlines.qoo.monster/assets/qoomon/starlines?1)](https://github.com/qoomon/starlines)
+# GitHub Starlines [![starline](https://starlines.qoo.monster/assets/qoomon/starlines)](https://github.com/qoomon/starlines)
 
 Dynamically generated GitHub stargazer history badges.
 

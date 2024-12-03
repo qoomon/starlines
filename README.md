@@ -1,6 +1,9 @@
 # GitHub Starlines [![starline](https://starlines.qoo.monster/assets/qoomon/starlines?1)](https://github.com/qoomon/starlines)
 
-Dynamically generated GitHub stargazer history badges. The x-axis of the history is scaled logarithmically.
+Dynamically generated GitHub stargazer history badges.
+
+> [!Note]
+> The starline x-axis is scaled logarithmically.
 
 ## Example
 [![starline](https://starlines.qoo.monster/assets/gists/5dfcdf8eec66a051ecd85625518cfd13)](https://github.com/qoomon/starline)

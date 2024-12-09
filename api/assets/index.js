@@ -83,7 +83,10 @@ async function GET(request, context) {
         })
     }
 
-    let cacheMaxAge = starlineConfig.cache.maxAge - starlineImage.age
+    let cacheMaxAge = (sourceRepository.startsWith('users/')
+        ? starlineConfig.cache.maxAgeUsers
+        : starlineConfig.cache.maxAge
+    ) - starlineImage.age
     if (cacheMaxAge <= 0) {
         console.log('Refresh starline image...')
         await triggerStarlineWorkflow(sourceRepository)

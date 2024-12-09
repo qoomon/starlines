@@ -7,8 +7,9 @@ export default  {
     },
     cache: {
         releaseTag: 'starlines',
-        maxAge: 24 * 60 * 60, // 1 day in seconds
-        maxAgeAfterTrigger: 60
+        maxAge: 60 * 60 * 24, // 1 day in seconds
+        maxAgeUsers: 60 * 60 * 24 * 7, // 1 week in seconds
+        maxAgeAfterTrigger: 60 * 1 // 1 minute in seconds
     },
     files: {
         image: {

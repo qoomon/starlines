@@ -75,6 +75,10 @@ async function getStargazerDates(repository) {
         for (const repository of repositories) {
             console.log(repository + '...')
             const stargazerDates = await getStargazerDates(repository)
+                .catch((error) => {
+                    console.error(error)
+                    return {cached: 0, fetched: 0, dates: []}
+                })
             cached += stargazerDates.cached
             fetched += stargazerDates.fetched
             dates = dates.concat(stargazerDates.dates)

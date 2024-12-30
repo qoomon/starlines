@@ -15,7 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    
+      
+    
     steps:
+      - name: Validate inputs
+        env:
+          INPUTS_REPOSITORY: ${{ github.event.inputs.repository }}
+        run: |
+          # ensure repository has no whitespaces
+          [[ $INPUTS_REPOSITORY = *[![:space:]]* ]] || exit 1
+        
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:

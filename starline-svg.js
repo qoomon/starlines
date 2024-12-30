@@ -2,7 +2,7 @@ import {min_max, Point} from "./lib/math.js";
 
 const height = 30
 const x0 = 5
-const y0 = 40
+const y0 = 46
 const steps = 40
 const dx = 5
 const basis = 1.5

@@ -19,13 +19,13 @@ jobs:
       
     
     steps:
-      - name: Validate inputs
-        env:
-          INPUTS_REPOSITORY: "${{ github.event.inputs.repository }}"
-        run: |
-          [[ $INPUTS_REPOSITORY = *[[:space:]]* ]] && 
-            echo "repository must not have whitespaces" &&
-            exit 1
+    #  - name: Validate inputs
+    #    env:
+    #      INPUTS_REPOSITORY: "${{ github.event.inputs.repository }}"
+    #    run: |
+    #      [[ $INPUTS_REPOSITORY = *[[:space:]]* ]] && 
+    #        echo "repository must not have whitespaces" &&
+    #       exit 1
         
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

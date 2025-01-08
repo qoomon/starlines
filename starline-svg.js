@@ -1,4 +1,4 @@
-import {min_max, Point} from "./lib/math.js";
+import {min_max, Point, normalize} from "./lib/math.js";
 
 const height = 30
 const x0 = 5
@@ -8,15 +8,18 @@ const dx = 5
 const basis = 1.5
 const gradient = ['#3023AE', '#C86DD7']
 
+
 export function createSvg(data) {
-    const yx = bucketDates(new Date(), data, steps)
-    const scale = Math.max(...yx) / height
+    let yx = bucketDates(new Date(), data, steps)
+
+    // scale to height
+    yx =  normalize(yx).map(it =>Math.pow(it, 0.5))
+    yx =  normalize(yx).map(it => it * height)
 
     const points = []
     let x = x0
     for (let y of yx) {
         x += dx
-        y = y / scale
         points.push(new Point(x, y0 - y))
     }
 
@@ -125,7 +128,8 @@ export function createLoadingSvg() {
 }
 
 function bucketDates(now, dates, n) {
-    const {min: minDate, max: maxDate} = min_max(dates.map(date => date.getTime()));
+    let {min: minDate, max: maxDate} = min_max(dates.map(date => date.getTime()));
+    maxDate = new Date(Math.max(maxDate, new Date()));
 
     const bucketRanges = getLogarithmicRanges(minDate, maxDate, n)
     // const bucketRanges = getLinearRanges(minDate, maxDate, n)

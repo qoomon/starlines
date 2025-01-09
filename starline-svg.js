@@ -13,8 +13,8 @@ export function createSvg(data) {
     let yx = bucketDates(new Date(), data, steps)
 
     // scale to height
-    yx =  normalize(yx).map(it =>Math.pow(it, 0.5))
-    yx =  normalize(yx).map(it => it * height)
+    yx = normalize(yx).map(it => Math.pow(it, 0.5))
+    yx = yx.map(it => it * height)
 
     const points = []
     let x = x0

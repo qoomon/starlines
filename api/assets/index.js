@@ -106,7 +106,7 @@ async function GET(request, context) {
 }
 
 async function triggerStarlineWorkflow(repository) {
-    console.log('Trigger starline workflow')
+    console.log(`Trigger starline workflow for ${repository}`)
     if (await isStarlineWorkflowRunning(repository)) {
         console.log('  Skip - Workflow is already running')
         return

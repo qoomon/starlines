@@ -1,30 +1,27 @@
 name: Create Starline
-run-name: "Create Starline for ${{ github.event.inputs.repository }}"
+run-name: "Create Starline for ${{ github.event.inputs.resource }}"
 
 on:
   workflow_dispatch:
     inputs:
-      repository:
+      resource:
         required: true
 
 concurrency:
-  group: ${{ github.event.inputs.repository }}
+  group: ${{ github.event.inputs.resource }}
 
 jobs:
   create-starline:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
-      
-    
     steps:
     #  - name: Validate inputs
     #    env:
-    #      INPUTS_REPOSITORY: "${{ github.event.inputs.repository }}"
+    #      INPUTS_RESOURCE: "${{ github.event.inputs.resource }}"
     #    run: |
-    #      [[ $INPUTS_REPOSITORY = *[[:space:]]* ]] && 
-    #        echo "repository must not have whitespaces" &&
+    #      [[ $INPUTS_RESOURCE = *[[:space:]]* ]] &&
+    #        echo "resource must not have whitespaces" &&
     #       exit 1
         
       - uses: actions/checkout@v4
@@ -37,24 +34,26 @@ jobs:
 
       - name: Add starline to step summary
         run: |
-          target='${{ github.event.inputs.repository }}'
-          if [[ $target == users/* ]]; then
-            echo "[$target](https://github.com/${target#users/})" >> $GITHUB_STEP_SUMMARY
-          elif [[ $target == gists/* ]]; then
-            echo "[$target](https://gist.github.com/${target#gists/})" >> $GITHUB_STEP_SUMMARY
+          if [[ ! "$ASSET" == *"/"* ]]; then
+            echo "[$ASSET](https://github.com/$ASSET)" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$ASSET" == *@gist ]]; then
+            echo "[$ASSET](https://gist.github.com/${ASSET%@gist})" >> $GITHUB_STEP_SUMMARY
           else
-            echo "[$target](https://github.com/$target)" >> $GITHUB_STEP_SUMMARY
+            echo "[$ASSET](https://github.com/$ASSET)" >> $GITHUB_STEP_SUMMARY
           fi
-      - run: node create-starline.js ${{ github.event.inputs.repository }}
+        env:
+          ASSET: ${{ github.event.inputs.resource }}
+
+      - run: node create-starline.js ${{ github.event.inputs.resource }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIST_GITHUB_TOKEN: ${{ secrets.GIST_GITHUB_TOKEN }}
       
       - name: Add starline to step summary
-        run: echo "[![starline](https://starlines.qoo.monster/assets/${ASSET})](https://github.com/qoomon/starlines/releases/download/starlines/${ASSET/\//--}--starline.svg)" >> $GITHUB_STEP_SUMMARY
+        run: echo "[![starline](https://starlines.qoo.monster/assets/$ASSET)](https://github.com/qoomon/starlines/releases/download/starlines/$(echo "$ASSET" | sed 's/[\/@]/--/g')--starline.svg)" >> $GITHUB_STEP_SUMMARY
         env:
-          ASSET: ${{ github.event.inputs.repository }}
+          ASSET: ${{ github.event.inputs.resource }}
     
       - uses: actions/upload-artifact@v4
         with:
-          path: starlines/${{ github.event.inputs.repository }}/starline.svg
+          path: starlines/${{ github.event.inputs.resource }}/starline.svg

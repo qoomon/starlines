@@ -19,7 +19,7 @@ Dynamically generated GitHub stargazer history badges.
 ```
 ### For GitHub Gists
 ```md
-[![starline](https://starlines.qoo.monster/assets/gists/GIST)](https://github.com/qoomon/starline)
+[![starline](https://starlines.qoo.monster/assets/OWNER/GIST@gist)](https://github.com/qoomon/starline)
 ```
 ### For GitHub Users
 ```md

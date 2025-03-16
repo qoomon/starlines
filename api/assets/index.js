@@ -91,7 +91,8 @@ async function GET(request, context) {
         })
     }
 
-    let cacheMaxAge = (resource.startsWith('users/')
+    let cacheMaxAge = (
+        !resource.includes('/') || resource.startsWith('users/')
             ? starlineConfig.cache.maxAgeUsers
             : starlineConfig.cache.maxAge
     ) - starlineImage.age

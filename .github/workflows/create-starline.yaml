@@ -20,7 +20,7 @@ jobs:
         env:
           ASSET: "${{ github.event.inputs.resource }}"
         run: |
-          [[ "$ASSET" = *[[:space:]]* ]] &&
+          [[ "$ASSET" =~ '[[:space:]]*' ]] &&
             echo "inputs.resource must not contain whitespaces" &&
             exit 1
         

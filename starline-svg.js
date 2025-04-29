@@ -22,7 +22,7 @@ export function createSvg(data) {
         points.push(new Point(x, y0 - y))
     }
 
-    const pathLength = calculatePathLength(points)
+    const pathLength = calculatePathLength(points) * 1.2
     
     const p0 = new Point(x0, y0)
     const p1 = points[0]
@@ -53,7 +53,8 @@ export function createSvg(data) {
         stroke-linejoin="round"
         stroke-linecap="round"
         d="${path}"
-        fill="none">
+        fill="none"
+        stroke-dashoffset="${pathLength}">
         <animate attributeName="stroke-dashoffset"
             from="${pathLength}" to="0" dur="3s"/>
         <animate attributeName="stroke-dasharray"

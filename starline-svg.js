@@ -1,4 +1,5 @@
 import {min_max, Point, normalize} from "./lib/math.js";
+import pathDataLength from "svg-getpointatlength"
 
 const height = 30
 const x0 = 5
@@ -22,8 +23,6 @@ export function createSvg(data) {
         points.push(new Point(x, y0 - y))
     }
 
-    const pathLength = calculatePathLength(points) * 1.2
-    
     const p0 = new Point(x0, y0)
     const p1 = points[0]
     const p2 = points[1]
@@ -39,6 +38,7 @@ export function createSvg(data) {
         path += ` S ${toPathPoint(c)}, ${toPathPoint(p1)}`
     }
 
+    const pathLength = pathDataLength.getPathLengthLookup(path).totalLength
     const pN = points.slice(-1)[0]
 
     return `<svg width="200" height="50" viewBox="0 0 210 50" xmlns="http://www.w3.org/2000/svg">
@@ -61,8 +61,8 @@ export function createSvg(data) {
     </path>
     <circle r="4" cx="${p0.x}" cy="${p0.y}" fill="${gradient[0]}"/>
     <circle r="4" cx="${pN.x}" cy="${pN.y}" fill="${gradient[1]}" opacity="0">
-        <animate attributeName="opacity" 
-            from="0" to="1" dur="0.1s" begin="2.85s" fill="freeze"/>
+        <animate attributeName="opacity"
+            from="0" to="1" dur="0.1s" begin="3s" fill="freeze"/>
     </circle>
 </svg>`
 }
@@ -202,22 +202,4 @@ function bucketDates(now, dates, n) {
 function toPathPoint(point) {
     const format = (num) => Number(num).toFixed(2)
     return `${format(point.x)} ${format(point.y)}`
-}
-
-function calculatePathLength(path) {
-  let totalLength = 0;
-  // Iterate through the path, starting from the second point
-  for (let i = 1; i < path.length; i++) {
-    const point1 = path[i - 1];
-    const point2 = path[i];
-
-    // Calculate the Euclidean distance between two points
-    const deltaX = point2.x - point1.x;
-    const deltaY = point2.y - point1.y;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-    totalLength += distance;
-  }
-
-  return totalLength;
 }

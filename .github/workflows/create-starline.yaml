@@ -16,13 +16,13 @@ jobs:
     permissions:
       contents: write
     steps:
-    #  - name: Validate inputs
-    #    env:
-    #      INPUTS_RESOURCE: "${{ github.event.inputs.resource }}"
-    #    run: |
-    #      [[ $INPUTS_RESOURCE = *[[:space:]]* ]] &&
-    #        echo "resource must not have whitespaces" &&
-    #       exit 1
+      - name: Validate inputs
+        env:
+          ASSET: "${{ github.event.inputs.resource }}"
+        run: |
+          [[ "$ASSET" = *[[:space:]]* ]] &&
+            echo "inputs.resource must not contain whitespaces" &&
+            exit 1
         
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -50,7 +50,8 @@ jobs:
           GIST_GITHUB_TOKEN: ${{ secrets.GIST_GITHUB_TOKEN }}
       
       - name: Add starline to step summary
-        run: echo "[![starline](https://starlines.qoo.monster/assets/$ASSET)](https://github.com/qoomon/starlines/releases/download/starlines/$(echo "$ASSET" | sed 's/[\/@]/--/g')--starline.svg)" >> $GITHUB_STEP_SUMMARY
+        run: |
+          echo "[![starline](https://starlines.qoo.monster/assets/$ASSET)](https://github.com/qoomon/starlines/releases/download/starlines/$(echo "$ASSET" | sed 's/[\/@]/--/g')--starline.svg)" >> $GITHUB_STEP_SUMMARY
         env:
           ASSET: ${{ github.event.inputs.resource }}
     

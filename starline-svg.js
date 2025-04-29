@@ -47,18 +47,21 @@ export function createSvg(data) {
         </linearGradient>
     </defs>
     <path stroke="url(#stroke)"
-          stroke-width="3"
-          stroke-linejoin="round"
-          stroke-linecap="round"
-          d="${path}"
-          fill="none">
-          <animate attributeName="stroke-dashoffset"
-                from="300" to="0" dur="2s"/>
-          <animate attributeName="stroke-dasharray"
-                from="300" to="300" />
+        stroke-width="3"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+        d="${path}"
+        fill="none">
+        <animate attributeName="stroke-dashoffset"
+            from="300" to="0" dur="2s"/>
+        <animate attributeName="stroke-dasharray"
+            from="300" to="300"/>
     </path>
     <circle r="4" cx="${p0.x}" cy="${p0.y}" fill="${gradient[0]}"/>
-    <circle r="4" cx="${pN.x}" cy="${pN.y}" fill="${gradient[1]}"/>      
+    <circle r="4" cx="${pN.x}" cy="${pN.y}" fill="${gradient[1]}" opacity="0">
+        <animate attributeName="opacity" 
+            from="0" to="1" dur="0.1s" begin="1.85s" fill="freeze"/>
+    </circle>
 </svg>`
 }
 

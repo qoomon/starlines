@@ -17,12 +17,17 @@ jobs:
       contents: write
     steps:
       - name: Validate inputs
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          retries: 3
+          script: |
+            if(process.env.INPUT_RESOURCE?.match(/\s+/)) {
+              core.failure(`inputs.resource must not contain whitespaces, but was'${process.env.INPUT_RESOURCE}'`)
+            }
         env:
-          ASSET: "${{ github.event.inputs.resource }}"
-        run: |
-          [[ "$ASSET" =~ '[[:space:]]+' ]] &&
-            echo "inputs.resource must not contain whitespaces" &&
-            exit 1
+          INPUT_RESOURCE: "${{ github.event.inputs.resource }}"
+
         
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -53,8 +53,7 @@ export function createSvg(data) {
         stroke-linejoin="round"
         stroke-linecap="round"
         d="${path}"
-        fill="none"
-        stroke-dashoffset="${pathLength}">
+        fill="none">
         <animate attributeName="stroke-dashoffset"
             from="${pathLength}" to="0" dur="3s"/>
         <animate attributeName="stroke-dasharray"

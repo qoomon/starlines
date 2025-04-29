@@ -8,7 +8,6 @@ const dx = 5
 const basis = 1.5
 const gradient = ['#3023AE', '#C86DD7']
 
-
 export function createSvg(data) {
     let yx = bucketDates(new Date(), data, steps)
 
@@ -52,7 +51,12 @@ export function createSvg(data) {
           stroke-linejoin="round"
           stroke-linecap="round"
           d="${path}"
-          fill="none"/>
+          fill="none">
+          <animate attributeName="stroke-dashoffset"
+                from="300" to="0" dur="2s"/>
+          <animate attributeName="stroke-dasharray"
+                from="300" to="300" />
+    </path>
     <circle r="4" cx="${p0.x}" cy="${p0.y}" fill="${gradient[0]}"/>
     <circle r="4" cx="${pN.x}" cy="${pN.y}" fill="${gradient[1]}"/>      
 </svg>`

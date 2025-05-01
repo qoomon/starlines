@@ -55,14 +55,14 @@ export function createSvg(data) {
         d="${path}"
         fill="none">
         <animate attributeName="stroke-dashoffset"
-            from="${pathLength}" to="0" dur="3s"/>
+            from="${pathLength}" to="0" dur="2.2s"/>
         <animate attributeName="stroke-dasharray"
             from="${pathLength}" to="${pathLength}"/>
     </path>
     <circle r="4" cx="${p0.x}" cy="${p0.y}" fill="${gradient[0]}"/>
     <circle r="4" cx="${pN.x}" cy="${pN.y}" fill="${gradient[1]}" opacity="0">
         <animate attributeName="opacity"
-            from="0" to="1" dur="0.1s" begin="3s" fill="freeze"/>
+            from="0" to="1" dur="0.1s" begin="2.2s" fill="freeze"/>
     </circle>
 </svg>`
 }

@@ -29,7 +29,7 @@ export function createSvg(data) {
     const c1 = p0.add(p1.sub(p0).unit().mul(basis))
     const c2 = p1.add(p0.sub(p2).unit().mul(basis))
     
-    let path = `M${toPathPoint(p0.sub(new Point(0, 0.001)))} C ${toPathPoint(c1)}, ${toPathPoint(c2)}, ${toPathPoint(p1)}`
+    let path = `M${toPathPoint(p0.sub(new Point(0, 0.01)))} C ${toPathPoint(c1)}, ${toPathPoint(c2)}, ${toPathPoint(p1)}`
     
     for (let i = 1; i < points.length; i++) {
         const p0 = points[i - 1]

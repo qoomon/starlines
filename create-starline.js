@@ -81,7 +81,6 @@ async function getStargazerDates(resource) {
         let dates = []
 
         for (const repository of await getUserRepositories(user)) {
-            console.log(repository + '...')
             const stargazerDates = await getStargazerDates(repository)
                 .catch((error) => {
                     console.error(error)

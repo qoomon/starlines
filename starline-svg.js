@@ -31,6 +31,7 @@ export function createSvg(data) {
     let path = `M${toPathPoint(p0)} C ${toPathPoint(c1)}, ${toPathPoint(c2)}, ${toPathPoint(p1)}`
 
     let pathLength = 0;
+    console.log("points.length:", points.length);
     if(points.length >= 2) {
         for (let i = 1; i < points.length; i++) {
             const p0 = points[i - 1]

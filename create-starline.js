@@ -45,7 +45,7 @@ const octokitGist = new Octokit({auth: process.env.GIST_GITHUB_TOKEN, throttle: 
 
 const stargazerDates = await getStargazerDates(input.resource)
 
-console.log(`Create starline image...`)
+console.log(`Create starline image from${stargazerDates.dates.length} stargazers...`)
 const svg = createSvg(stargazerDates.dates)
 const svgFileName = `${input.resource}/${starlineConfig.files.image.name}`
 

@@ -10,11 +10,13 @@ const basis = 1.5
 const gradient = ['#3023AE', '#C86DD7']
 
 export function createSvg(data) {
+console.log("TODO ### data.length:", data.length);
     let yx = bucketDates(new Date(), data, steps)
 
     // scale to height
     yx = normalize(yx).map(it => Math.pow(it, 0.5))
     yx = yx.map(it => it * height)
+console.log("TODO ### yx.length:", yx.length);
 
     const points = []
     let x = x0
@@ -22,6 +24,7 @@ export function createSvg(data) {
         x += dx
         points.push(new Point(x, y0 - y))
     }
+console.log("TODO ###1 points.length:", data.length);
 
     const p0 = new Point(x0, y0)
     const p1 = points[0]
@@ -31,7 +34,7 @@ export function createSvg(data) {
     let path = `M${toPathPoint(p0)} C ${toPathPoint(c1)}, ${toPathPoint(c2)}, ${toPathPoint(p1)}`
 
     let pathLength = 0;
-    console.log("points.length:", points.length);
+console.log("TODO ###2 points.length:", points.length);
     if(points.length >= 2) {
         for (let i = 1; i < points.length; i++) {
             const p0 = points[i - 1]

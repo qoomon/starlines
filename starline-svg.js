@@ -38,8 +38,7 @@ export function createSvg(data) {
         const c = p0.sub(p2).unit().mul(basis).add(p1)
         path += ` S ${toPathPoint(c)}, ${toPathPoint(p1)}`
     }
-console.log("TODO ### points:", points)   
-console.log("TODO ### path:", path)    
+
     const pathLength = pathDataLength.getPathLengthLookup(path).totalLength;
        
     const pN = points.slice(-1)[0]

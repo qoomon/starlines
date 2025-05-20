@@ -46,7 +46,7 @@ export default async (request, context) => {
  */
 export
 async function GET(request, context) {
-    console.log('Request Referer:', request.headers['referer'])
+    console.log('Request Origin:', request.headers['origin'])
     
     // legacy user support
     if (context.params['0'].startsWith('users/')) {

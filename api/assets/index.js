@@ -44,9 +44,8 @@ export default async (request, context) => {
  * @param context
  * @returns {Promise<Response>}
  */
-export
-async function GET(request, context) {
-    console.log('Request Origin:', request.headers['origin'])
+export async function GET(request, context) {
+    console.log('Request Origin:', request.headers.get('origin'))
     
     // legacy user support
     if (context.params['0'].startsWith('users/')) {

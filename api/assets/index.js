@@ -133,8 +133,8 @@ async function triggerStarlineWorkflow(resource) {
 async function isStarlineWorkflowRunning(resource) {
     const workflowsResponse = await octokit.rest.actions.listWorkflowRuns({
         ...starlineConfig.repository,
-        status: 'in_progress',
         workflow_id: starlineConfig.workflow.id,
+        created: '>' + subtractDaysFromDate(new Date(), 1).toISOString(),
         per_page: 64
     })
     return workflowsResponse.data.workflow_runs
@@ -159,5 +159,10 @@ async function resourceExists(resource) {
     }
 
     return false;
+}
+
+function subtractDaysFromDate(date, days) {
+    date.setDate(date.getDate() - days);
+    return date;
 }
 

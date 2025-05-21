@@ -132,8 +132,9 @@ async function isStarlineWorkflowRunning(resource) {
     const workflowsResponse = await octokit.rest.actions.listWorkflowRuns({
         ...starlineConfig.repository,
         workflow_id: starlineConfig.workflow.id,
-        created: '>' + subtractDaysFromDate(new Date(), 1).toISOString(),
-        per_page: 64
+        status: 'in_progress',
+        // created: '>' + subtractDaysFromDate(new Date(), 1).toISOString(),
+        per_page: 64,
     })
     return workflowsResponse.data.workflow_runs
         .some((run) => run.name.endsWith(` ${resource}`))

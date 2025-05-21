@@ -9,6 +9,7 @@ on:
 
 concurrency:
   group: ${{ github.event.inputs.resource }}
+  cancel-in-progress: true
 
 jobs:
   create-starline:

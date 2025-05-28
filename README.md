@@ -6,7 +6,7 @@ Dynamically generated GitHub stargazer history badges.
 > The starline x-axis is scaled logarithmically and the y-axis is scaled by square root.
 
 ## Example
-[![starline](https://starlines.qoo.monster/assets/qoomon)](https://github.com/qoomon/starline)
+[![starline](https://starlines.qoo.monster/assets/qoomon)](https://github.com/qoomon)
 
 ## Usage
 > [!NOTE]  

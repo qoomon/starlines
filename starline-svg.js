@@ -44,6 +44,7 @@ export function createSvg(data) {
     const pN = points.slice(-1)[0]
 
     return `<svg width="200" height="50" viewBox="0 0 210 50" xmlns="http://www.w3.org/2000/svg">
+    <!-- ${data.length} stargazers -->
     <defs>
         <linearGradient id="stroke" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop stop-color="${gradient[0]}" offset="0%"/>

@@ -83,7 +83,7 @@ export async function GET(request, context) {
 
         const loadingSvg = createLoadingSvg()
         return new Response(loadingSvg, {
-            status: 202, headers: {
+            status: 200, headers: {
                 'Content-Type': starlineConfig.files.image.contentType,
                 'Cache-Control': `public, max-age=0, s-maxage=${starlineConfig.cache.maxAgeAfterTrigger}`,
             }

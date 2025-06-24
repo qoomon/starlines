@@ -10,7 +10,7 @@ const basis = 1.5
 const gradient = ['#3023AE', '#C86DD7']
 
 export function createSvg(data) {
-    let yx = bucketDates(new Date(), data, steps)
+    let yx = bucketDates(data, steps)
 
     // scale to height
     yx = normalize(yx).map(it => Math.pow(it, 0.5))
@@ -28,9 +28,9 @@ export function createSvg(data) {
     const p2 = points[1]
     const c1 = p0.add(p1.sub(p0).unit().mul(basis))
     const c2 = p1.add(p0.sub(p2).unit().mul(basis))
-    
+
     let path = `M${toPathPoint(p0)}01 C ${toPathPoint(c1)}, ${toPathPoint(c2)}, ${toPathPoint(p1)}`
-    
+
     for (let i = 1; i < points.length; i++) {
         const p0 = points[i - 1]
         const p1 = points[i]
@@ -40,7 +40,7 @@ export function createSvg(data) {
     }
 
     const pathLength = pathDataLength.getPathLengthLookup(path).totalLength;
-       
+
     const pN = points.slice(-1)[0]
 
     return `<svg width="200" height="50" viewBox="0 0 210 50" xmlns="http://www.w3.org/2000/svg">
@@ -139,12 +139,11 @@ export function createLoadingSvg() {
 </svg>`
 }
 
-function bucketDates(now, dates, n) {
-    let {min: minDate, max: maxDate} = min_max(dates.map(date => date.getTime()));
-    maxDate = new Date(Math.max(maxDate, new Date()));
+function bucketDates(dates, n, now = new Date()) {
+    let {min: firstStarTime} = min_max(dates.map(date => date.getTime()))
 
-    const bucketRanges = getLogarithmicRanges(minDate, maxDate, n)
-    // const bucketRanges = getLinearRanges(minDate, maxDate, n)
+    const bucketRanges = getLogarithmicRanges(firstStarTime, now.getTime(), n)
+    // const bucketRanges = getLinearRanges(firstStarTime, now.getTime, n)
 
     const lastRange = getRange(bucketRanges, n - 1)
 

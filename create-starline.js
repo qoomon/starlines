@@ -7,7 +7,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import {
     downloadGithubReleaseAsset,
-    getGistOwner,
+    getLogin,
     gistExists,
     parseRepository,
     uploadGithubReleaseAsset
@@ -17,6 +17,11 @@ import starlineConfig from "./config.js";
 const input = {
     resource: process.argv[2]
 }
+
+// normalize resource name
+const inputResourceParts = input.resource.split('/');
+inputResourceParts[0] = await getLogin(inputResourceParts[0]);
+input.resource = inputResourceParts.join('/');
 
 const Octokit = _Octokit
     .plugin(throttling)

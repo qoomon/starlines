@@ -33,7 +33,7 @@ export default async (request, context) => {
         case 'GET':
             return await GET(request, context);
         default:
-            new Response('Method not allowed', {
+            return new Response('Method not allowed', {
                 status: 405,
             })
     }

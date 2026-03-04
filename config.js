@@ -6,7 +6,7 @@ export default  {
         repo: 'starlines',
     },
     cache: {
-        releaseTag: 'starlines',
+        branch: 'assets',
         maxAge: 60 * 60 * 24 * 7, // 1 week in seconds
         maxAgeUsers: 60 * 60 * 24 * 7, // 1 week in seconds
         maxAgeAfterTrigger: 60 * 1 // 1 minute in seconds

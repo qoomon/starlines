@@ -6,11 +6,11 @@ import {createSvg} from "./starline-svg.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import {
-    downloadGithubReleaseAsset,
     getLogin,
     gistExists,
     parseRepository,
-    uploadGithubReleaseAsset
+    getGitHubFileMeta,
+    downloadGitHubFile,
 } from "./lib/github.js";
 import starlineConfig from "./config.js";
 
@@ -58,18 +58,6 @@ const svgFileName = `${input.resource}/${starlineConfig.files.image.name}`
 const svgFileNameLocal = 'starlines/' + svgFileName
 console.log('  Write to ' + svgFileNameLocal)
 writeFileSyncRecursive(svgFileNameLocal, svg)
-
-// store image to GitHub release
-console.log(`  Upload to GitHub release ${starlineConfig.cache.releaseTag}`)
-await uploadGithubReleaseAsset({
-    ...starlineConfig.repository,
-    releaseTag: starlineConfig.cache.releaseTag,
-    fileName: svgFileName,
-    label: `${input.resource} SVG`,
-    fileData: svg,
-    contentType: starlineConfig.files.image.contentType,
-    overwrite: true,
-})
 
 // --- main end ---------------------------------------------------------------
 
@@ -139,11 +127,10 @@ async function getStargazerDates(resource) {
     }
 
     const stargazerDates = fetchedStargazerDates.concat(stargazerCache.dates)
-    if (fetchedStargazerDates.length > 0) {
-        console.log(`  Store stargazers cache...`)
-        await storeStargazerDates(resource, stargazerDates)
-        console.log(`    ${stargazerDates.length} stargazers (latest: ${stargazerDates[0].toISOString().split('T')[0]})`)
-    }
+    console.log(`  Store stargazers cache...`)
+    await storeStargazerDates(resource, stargazerDates)
+    console.log(`    ${stargazerDates.length} stargazers (latest: ${stargazerDates[0].toISOString().split('T')[0]})`)
+
 
     return {
         cached: stargazerCache.dates.length,
@@ -259,17 +246,6 @@ async function storeStargazerDates(resource, dates) {
 
     // local file store
     writeFileSyncRecursive('starlines/' + fileName, fileData)
-
-    // github release store
-    await uploadGithubReleaseAsset({
-        ...starlineConfig.repository,
-        releaseTag: starlineConfig.cache.releaseTag,
-        fileName,
-        label: `${resource} Cache`,
-        fileData,
-        contentType: starlineConfig.files.dates.contentType,
-        overwrite: true,
-    })
 }
 
 /**
@@ -278,21 +254,28 @@ async function storeStargazerDates(resource, dates) {
  * @returns {Promise<{dates: Date[], age: number}>}
  */
 async function loadStargazerDates(resource) {
-    const asset = await downloadGithubReleaseAsset({
+    const datesMeta = await getGitHubFileMeta({
         ...starlineConfig.repository,
-        releaseTag: starlineConfig.cache.releaseTag,
-        fileName: `${resource}/${starlineConfig.files.dates.name}`,
+        ref: starlineConfig.cache.branch,
+        path: `${resource}/${starlineConfig.files.dates.name}`,
     })
-    if (!asset) {
+  
+    if (!datesMeta) {
         return {
             dates: [],
             age: Infinity,
         }
     }
-
+   
+    const dates = await downloadGitHubFile({
+        ...starlineConfig.repository,
+        ref: starlineConfig.cache.branch,
+        path: `${resource}/${starlineConfig.files.dates.name}`,
+    }).then((data) => new TextDecoder().decode(data)).then((content) => JSON.parse(content))
+   
     return {
-        dates: JSON.parse(asset.data).map((date) => new Date(date)),
-        age: parseInt(asset.age),
+        dates: dates.map((date) => new Date(date)),
+        lastModified: datesMeta.lastModified,
     }
 }
 

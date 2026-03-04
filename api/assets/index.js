@@ -2,11 +2,11 @@ import {Octokit as _Octokit} from "@octokit/core";
 import {restEndpointMethods} from "@octokit/plugin-rest-endpoint-methods";
 import {createLoadingSvg} from "../../starline-svg.js";
 import {
-    downloadGithubReleaseAsset,
     gistExists,
-    parseRepository,
     repositoryExists,
-    userExists
+    userExists,
+    getGitHubFileMeta,
+    downloadGitHubFile,
 } from "../../lib/github.js";
 import starlineConfig from "../../config.js";
 
@@ -70,14 +70,14 @@ export async function GET(request, context) {
             }
         })
     }
-
-    const starlineImage = await downloadGithubReleaseAsset({
+  
+    const starlineMeta = await getGitHubFileMeta({
         ...starlineConfig.repository,
-        releaseTag: starlineConfig.cache.releaseTag,
-        fileName: `${resource}/${starlineConfig.files.image.name}`,
+        ref: starlineConfig.cache.branch,
+        path: `${resource}/${starlineConfig.files.image.name}`,
     })
 
-    if (!starlineImage) {
+    if (!starlineMeta) {
         console.log('Create starline image...')
         await triggerStarlineWorkflow(resource)
 
@@ -89,12 +89,21 @@ export async function GET(request, context) {
             }
         })
     }
+  
+    const starlineImage = await downloadGitHubFile({
+      ...starlineConfig.repository,
+      ref: starlineConfig.cache.branch,
+      path: `${resource}/${starlineConfig.files.image.name}`,
+    })
 
+    const starlineAge = (new Date() - starlineMeta.lastModified) / 1000
+  
     let cacheMaxAge = (
         !resource.includes('/') || resource.startsWith('users/')
             ? starlineConfig.cache.maxAgeUsers
             : starlineConfig.cache.maxAge
-    ) - starlineImage.age
+    ) - starlineAge
+  
     if (cacheMaxAge <= 0) {
         console.log('Refresh starline image...')
         await triggerStarlineWorkflow(resource)
@@ -102,10 +111,10 @@ export async function GET(request, context) {
         cacheMaxAge = starlineConfig.cache.maxAgeAfterTrigger
     }
 
-    return new Response(starlineImage.data, {
+    return new Response(starlineImage, {
         status: 200, headers: {
             'Content-Type': starlineConfig.files.image.contentType,
-            'Last-Modified': starlineImage.lastModified.toUTCString(),
+            'Last-Modified': starlineMeta.lastModified.toUTCString(),
             'Cache-Control': `public, max-age=0, s-maxage=${cacheMaxAge}`,
         }
     })

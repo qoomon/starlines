@@ -73,7 +73,7 @@ jobs:
       
       - name: Add starline to step summary
         run: |
-          echo "[![starline](https://starlines.qoo.monster/assets/$ASSET)](https://github.com/qoomon/starlines/releases/download/starlines/$(echo "$ASSET" | sed 's/[\/@]/--/g')--starline.svg)" >> $GITHUB_STEP_SUMMARY
+          echo "[![starline](https://starlines.qoo.monster/assets/$ASSET)](https://starlines.qoo.monster/assets/$ASSET  )" >> $GITHUB_STEP_SUMMARY
         env:
           ASSET: ${{ github.event.inputs.resource }}
     

@@ -30,7 +30,7 @@ jobs:
           INPUT_RESOURCE: "${{ github.event.inputs.resource }}"
 
         
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -54,6 +54,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIST_GITHUB_TOKEN: ${{ secrets.GIST_GITHUB_TOKEN }}
+      
+      - uses: qoomon/actions--setup-git@v1
+        
+      - run: |
+          cp starlines/* assets/
+      
+      - uses: actions/checkout@v6  
+        with:
+          ref: assets
+          path: assets/
+      - working-directory: assets/   
+        run: |
+          git add .
+          git commit -m "update starline for $ASSET"
+          git push  
+        env:
+          ASSET: ${{ github.event.inputs.resource }}
+        
       
       - name: Add starline to step summary
         run: |

@@ -58,7 +58,7 @@ jobs:
       - uses: qoomon/actions--setup-git@v1
         
       - run: |
-          cp starlines/* assets/
+          cp -r starlines/* assets/
       
       - uses: actions/checkout@v6  
         with:

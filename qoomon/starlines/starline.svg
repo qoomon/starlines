@@ -7,6 +7,7 @@
             <stop stop-color="#C86DD7" offset="100%"/>
         </linearGradient>
     </defs>
+    
     <path stroke="url(#stroke)"
         stroke-width="3"
         stroke-linejoin="round"

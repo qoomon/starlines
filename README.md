@@ -27,7 +27,7 @@ Dynamically generated GitHub stargazer history badges.
 ```
 
 ## Starline Cache
-[GitHub Starlines Release](https://github.com/qoomon/starline/releases/tag/starlines)
+[Asset branch](https://github.com/qoomon/starlines/tree/assets)
 
 ## Sources
 - Heavily inspired by [spark](https://github.com/antonmedv/spark)

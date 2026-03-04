@@ -63,4 +63,5 @@ jobs:
     
       - uses: actions/upload-artifact@v4
         with:
+          archive: false
           path: starlines/${{ github.event.inputs.resource }}/starline.svg

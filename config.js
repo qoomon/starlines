@@ -7,7 +7,7 @@ export default  {
     },
     cache: {
         branch: 'assets',
-        maxAge: 60 * 60 * 24 * 7, // 1 week in seconds
+        maxAge: 60 * 60 * 24 * 3, // 3 days in seconds
         maxAgeUsers: 60 * 60 * 24 * 7, // 1 week in seconds
         maxAgeAfterTrigger: 60 * 1 // 1 minute in seconds
     },

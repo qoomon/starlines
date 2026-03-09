@@ -68,8 +68,7 @@ jobs:
         run: |
           cp -r ../starlines/* ./
           git add .
-          git commit -m "update starline for $ASSET"
-          git push  
+          git commit -m "update starline for $ASSET" && git push || true
         env:
           ASSET: ${{ github.event.inputs.resource }}
         

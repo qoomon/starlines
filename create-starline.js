@@ -129,7 +129,8 @@ async function getStargazerDates(resource) {
     const stargazerDates = fetchedStargazerDates.concat(stargazerCache.dates)
     console.log(`  Store stargazers cache...`)
     await storeStargazerDates(resource, stargazerDates)
-    console.log(`    ${stargazerDates.length} stargazers (latest: ${stargazerDates[0].toISOString().split('T')[0]})`)
+    console.log(`    ${stargazerDates.length} stargazers` +
+        stargazerDates.length ? ` (latest: ${stargazerDates[0].toISOString().split('T')[0]})` : '')
 
 
     return {

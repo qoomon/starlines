@@ -99,11 +99,18 @@ async function getStargazerDates(resource) {
         console.log(`    0 stargazers`)
     }
 
+    const localFileName = 'starlines/' + `${resource}/${starlineConfig.files.dates.name}`
+    // Initialize local cache file with existing cached dates (newest first)
+    writeFileSyncRecursive(localFileName,
+        stargazerCache.dates.map((d) => d.getTime()).join('\n') +
+        (stargazerCache.dates.length > 0 ? '\n' : ''))
+
     const fetchedStargazerDates = []
 
     console.log(`  Fetch stargazers...`)
     for await (const stargazersBatch of await getStargazerIterator(resource)) {
         let stopIterating = false
+        const batchNewDates = []
 
         const starredAtDates = stargazersBatch.edges.map(({starredAt}) => new Date(starredAt))
         for (const starredAtDate of starredAtDates) {
@@ -111,7 +118,12 @@ async function getStargazerDates(resource) {
                 stopIterating = true
                 break;
             }
+            batchNewDates.push(starredAtDate)
             fetchedStargazerDates.push(starredAtDate);
+        }
+
+        if (batchNewDates.length > 0) {
+            fs.appendFileSync(localFileName, batchNewDates.map((d) => d.getTime()).join('\n') + '\n')
         }
 
         const fetchedStargazersCount = fetchedStargazerDates.length;
@@ -127,8 +139,6 @@ async function getStargazerDates(resource) {
     }
 
     const stargazerDates = fetchedStargazerDates.concat(stargazerCache.dates)
-    console.log(`  Store stargazers cache...`)
-    await storeStargazerDates(resource, stargazerDates)
     console.log(`    ${stargazerDates.length} stargazers` +
         (stargazerDates.length > 0 ? ` (latest: ${stargazerDates[0].toISOString().split('T')[0]})` : ''))
 
@@ -238,16 +248,7 @@ async function getUserRepositories(user) {
     return result
 }
 
-// --- Stargazer Store ---------------------------------------------------
-
-async function storeStargazerDates(resource, dates) {
-    const fileName = `${resource}/${starlineConfig.files.dates.name}`
-    let fileData = dates.map((date) => date.getTime())
-    fileData = JSON.stringify(fileData)
-
-    // local file store
-    writeFileSyncRecursive('starlines/' + fileName, fileData)
-}
+// --- Stargazer Cache ---------------------------------------------------
 
 /**
  * Load dates
@@ -272,10 +273,14 @@ async function loadStargazerDates(resource) {
         ...starlineConfig.repository,
         ref: starlineConfig.cache.branch,
         path: `${resource}/${starlineConfig.files.dates.name}`,
-    }).then((data) => new TextDecoder().decode(data)).then((content) => JSON.parse(content))
+    }).then((data) => new TextDecoder().decode(data))
+        .then((content) => content.split('\n')
+            .filter((line) => line.trim())
+            .map((line) => new Date(parseInt(line.trim(), 10)))
+            .sort((a, b) => b - a)) // newest first
    
     return {
-        dates: dates.map((date) => new Date(date)),
+        dates,
         lastModified: datesMeta.lastModified,
     }
 }

@@ -17,8 +17,8 @@ export default  {
             contentType: 'image/svg+xml'
         },
         dates: {
-            name: 'stargazer-dates.json',
-            contentType: 'application/json'
+            name: 'stargazer-dates.txt',
+            contentType: 'text/plain'
         },
     },
     workflow: {

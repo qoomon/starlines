@@ -20,7 +20,7 @@ const input = {
 
 // normalize resource name
 const inputResourceParts = input.resource.split('/');
-inputResourceParts[0] = await getLogin(inputResourceParts[0]);
+inputResourceParts[0] = await getLogin(inputResourceParts[0]) ?? inputResourceParts[0];
 input.resource = inputResourceParts.join('/');
 
 const Octokit = _Octokit

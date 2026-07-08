@@ -167,7 +167,7 @@ async function getStargazerIterator(repository) {
                   }
                 }`, {
             gist: repositoryObject.repo,
-        }), (res) => res.viewer.gist.stargazers)
+        }), (res) => res.viewer?.gist?.stargazers)
     }
 
     // repository
@@ -191,7 +191,7 @@ async function getStargazerIterator(repository) {
                 }`, {
         owner: repositoryObject.owner,
         repo: repositoryObject.repo,
-    }), (res) => res.repositoryOwner.repository.stargazers)
+    }), (res) => res.repositoryOwner?.repository?.stargazers)
 }
 
 async function getUserRepositories(user) {
@@ -288,8 +288,19 @@ function writeFileSyncRecursive(filename, content = '') {
 }
 
 async function* wrapAsyncIteratorWithMapping(asyncIterator, mapFn) {
-    for await (const value of asyncIterator) {
-        yield await mapFn(value);
+    try {
+        for await (const value of asyncIterator) {
+            const mapped = await mapFn(value);
+            if (mapped != null) {
+                yield mapped;
+            }
+        }
+    } catch (error) {
+        if (error.name === 'MissingPageInfo') {
+            // Resource not found or not accessible; return empty iterator
+            return;
+        }
+        throw error;
     }
 }
 

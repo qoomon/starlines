@@ -71,7 +71,7 @@ export async function GET(request, context) {
         })
     }
   
-    const starlineMeta = await getGitHubFileMeta({
+    const starlineMeta = await getGitHubFileMeta(octokit, {
         ...starlineConfig.repository,
         ref: starlineConfig.cache.branch,
         path: `${resource}/${starlineConfig.files.image.name}`,

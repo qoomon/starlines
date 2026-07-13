@@ -255,7 +255,7 @@ async function storeStargazerDates(resource, dates) {
  * @returns {Promise<{dates: Date[], age: number}>}
  */
 async function loadStargazerDates(resource) {
-    const datesMeta = await getGitHubFileMeta({
+    const datesMeta = await getGitHubFileMeta(octokit, {
         ...starlineConfig.repository,
         ref: starlineConfig.cache.branch,
         path: `${resource}/${starlineConfig.files.dates.name}`,

@@ -1,5 +1,8 @@
 # GitHub Starlines [![starline](https://starlines.qoo.monster/assets/qoomon/starlines)](https://github.com/qoomon/starlines)
 
+> [!CAUTION]
+> Unfortunately [github restrict access to stargazers](https://github.blog/changelog/2026-06-30-upcoming-access-restrictions-to-public-api-endpoints-and-ui-views/). Therefore it is not possible to provide a public endpoint anymore.
+
 Dynamically generated GitHub stargazer history badges.
 
 > [!Note]

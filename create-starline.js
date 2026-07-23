@@ -172,7 +172,7 @@ async function getStargazerIterator(repository) {
 
     // repository
     const repositoryObject = parseRepository(repository);
-    return wrapAsyncIteratorWithMapping(octokit.graphql.paginate.iterator(`
+    return wrapAsyncIteratorWithMapping(octokitGist.graphql.paginate.iterator(`
                 query paginate ($owner: String!, $repo: String!, $cursor: String) {
                   repositoryOwner(login: $owner) {
                     repository(name: $repo) {
@@ -197,7 +197,7 @@ async function getStargazerIterator(repository) {
 async function getUserRepositories(user) {
     let result = []
 
-    const repositories = await octokit.graphql.paginate(`
+    const repositories = await octokitGist.graphql.paginate(`
         query paginate ($owner: String!, $cursor: String) {
           repositoryOwner(login: $owner) {
             repositories(ownerAffiliations:[OWNER], first: 100, after: $cursor) {

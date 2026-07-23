@@ -8,10 +8,6 @@ inputs:
   github-token:
     description: 'GitHub token with read access to the target repository or gist stargazers'
     required: true
-  gist-github-token:
-    description: 'GitHub token with gist read access (only required for gist resources, falls back to github-token)'
-    required: false
-    default: ''
 
 runs:
   using: composite
@@ -31,4 +27,3 @@ runs:
       run: node ${{ github.action_path }}/create-starline.js "${{ inputs.resource }}"
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
-        GIST_GITHUB_TOKEN: ${{ inputs.gist-github-token }}

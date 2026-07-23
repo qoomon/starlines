@@ -46,7 +46,6 @@ const OctokitThrottle = {
 }
 
 const octokit = new Octokit({auth: process.env.GITHUB_TOKEN, throttle: OctokitThrottle})
-const octokitGist = new Octokit({auth: process.env.GIST_GITHUB_TOKEN || process.env.GITHUB_TOKEN, throttle: OctokitThrottle})
 
 // --- main start -------------------------------------------------------------
 
@@ -120,7 +119,7 @@ async function getStargazerIterator(repository) {
             throw new Error(`Gist ${repository} not found`)
         }
         const repositoryObject = parseRepository(repository);
-        return wrapAsyncIteratorWithMapping(octokitGist.graphql.paginate.iterator(`
+        return wrapAsyncIteratorWithMapping(octokit.graphql.paginate.iterator(`
                 query paginate ($gist: String!, $cursor: String) {
                   viewer {
                     gist(name: $gist) {

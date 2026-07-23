@@ -52,8 +52,7 @@ The action writes `starline.svg` and `starline-cache.json` directly to the works
 | Input | Required | Description |
 |---|---|---|
 | `resource` | ✅ | Repository (`owner/repo`) or gist (`owner/gist-id@gist`) |
-| `github-token` | ✅ | GitHub token with read access to the target repository/gist stargazers |
-| `gist-github-token` | ❌ | GitHub token with gist read access (falls back to `github-token`) |
+| `github-token` | ✅ | GitHub token with read access to the target repository or gist stargazers |
 
 ## Sources
 - Heavily inspired by [spark](https://github.com/antonmedv/spark)

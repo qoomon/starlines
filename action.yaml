@@ -1,0 +1,48 @@
+name: 'Starlines'
+description: 'Generate a starline SVG for a GitHub repository or gist'
+
+inputs:
+  resource:
+    description: 'GitHub repository (owner/repo) or gist (owner/gist-id@gist)'
+    required: true
+  github-token:
+    description: 'GitHub token with read access to the target repository or gist stargazers'
+    required: true
+  gist-github-token:
+    description: 'GitHub token with gist read access (only required for gist resources, falls back to github-token)'
+    required: false
+    default: ''
+  cache-file:
+    description: 'Path to an existing stargazer dates cache JSON file to resume from'
+    required: false
+    default: ''
+
+outputs:
+  svg-file:
+    description: 'Absolute path to the generated starline SVG file'
+    value: ${{ steps.create.outputs.svg-file }}
+  cache-file:
+    description: 'Absolute path to the updated stargazer dates cache JSON file'
+    value: ${{ steps.create.outputs.cache-file }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci
+
+    - name: Create starline
+      id: create
+      shell: bash
+      run: node ${{ github.action_path }}/create-starline.js "${{ inputs.resource }}"
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GIST_GITHUB_TOKEN: ${{ inputs.gist-github-token }}
+        STARLINE_CACHE_FILE: ${{ inputs.cache-file }}
+        STARLINE_OUTPUT_DIR: ${{ runner.temp }}/starlines

@@ -12,18 +12,6 @@ inputs:
     description: 'GitHub token with gist read access (only required for gist resources, falls back to github-token)'
     required: false
     default: ''
-  cache-file:
-    description: 'Path to an existing stargazer dates cache JSON file to resume from'
-    required: false
-    default: ''
-
-outputs:
-  svg-file:
-    description: 'Absolute path to the generated starline SVG file'
-    value: ${{ steps.create.outputs.svg-file }}
-  cache-file:
-    description: 'Absolute path to the updated stargazer dates cache JSON file'
-    value: ${{ steps.create.outputs.cache-file }}
 
 runs:
   using: composite
@@ -38,11 +26,9 @@ runs:
       run: npm ci
 
     - name: Create starline
-      id: create
       shell: bash
+      working-directory: ${{ github.workspace }}
       run: node ${{ github.action_path }}/create-starline.js "${{ inputs.resource }}"
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         GIST_GITHUB_TOKEN: ${{ inputs.gist-github-token }}
-        STARLINE_CACHE_FILE: ${{ inputs.cache-file }}
-        STARLINE_OUTPUT_DIR: ${{ runner.temp }}/starlines

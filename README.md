@@ -9,7 +9,7 @@ Generates stargazer history badges (SVGs) for GitHub repositories and gists.
 > The starline x-axis is scaled logarithmically and the y-axis is scaled by square root.
 
 ## Example
-![starline](api/assets/animated-demo.svg)
+![starline](https://raw.githubusercontent.com/qoomon/starlines/assets/qoomon/starlines/starline.svg)
 
 ## Usage
 
@@ -32,22 +32,20 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Generate starline
-        id: starline
         uses: qoomon/starlines@main
         with:
           resource: owner/repo           # or owner/gist-id@gist for gists
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          cache-file: stargazer-dates.json  # optional: resume from existing cache
 
       - name: Commit outputs
         run: |
-          cp "${{ steps.starline.outputs.svg-file }}" starline.svg
-          cp "${{ steps.starline.outputs.cache-file }}" stargazer-dates.json
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add starline.svg stargazer-dates.json
+          git add starline.svg starline-cache.json
           git commit -m "update starline" && git push || true
 ```
+
+The action writes `starline.svg` and `starline-cache.json` directly to the workspace root. If `starline-cache.json` already exists (e.g. committed from a previous run), it is used to resume incremental fetching.
 
 ### Inputs
 
@@ -56,14 +54,6 @@ jobs:
 | `resource` | ✅ | Repository (`owner/repo`) or gist (`owner/gist-id@gist`) |
 | `github-token` | ✅ | GitHub token with read access to the target repository/gist stargazers |
 | `gist-github-token` | ❌ | GitHub token with gist read access (falls back to `github-token`) |
-| `cache-file` | ❌ | Path to an existing cache JSON file to resume from |
-
-### Outputs
-
-| Output | Description |
-|---|---|
-| `svg-file` | Absolute path to the generated starline SVG |
-| `cache-file` | Absolute path to the updated stargazer dates cache JSON |
 
 ## Sources
 - Heavily inspired by [spark](https://github.com/antonmedv/spark)

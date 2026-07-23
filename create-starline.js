@@ -4,17 +4,17 @@ import {paginateGraphQL} from "@octokit/plugin-paginate-graphql";
 import {throttling} from "@octokit/plugin-throttling";
 import {createSvg} from "./starline-svg.js";
 import * as fs from "node:fs";
-import * as path from "node:path";
 import {
     getLogin,
     gistExists,
     parseRepository,
 } from "./lib/github.js";
 
+const CACHE_FILE = 'starline-cache.json'
+const SVG_FILE = 'starline.svg'
+
 const input = {
     resource: process.argv[2],
-    cacheFile: process.env.STARLINE_CACHE_FILE || null,
-    outputDir: process.env.STARLINE_OUTPUT_DIR || path.join(process.env.RUNNER_TEMP || '.', 'starlines'),
 }
 
 if (!input.resource) {
@@ -55,20 +55,11 @@ const stargazerDates = await getStargazerDates(input.resource)
 console.log(`Create starline image from ${stargazerDates.dates.length} stargazers...`)
 const svg = createSvg(stargazerDates.dates)
 
-const svgFilePath = path.resolve(path.join(input.outputDir, 'starline.svg'))
-const cacheFilePath = path.resolve(path.join(input.outputDir, 'stargazer-dates.json'))
+console.log(`  Write SVG to ${SVG_FILE}`)
+fs.writeFileSync(SVG_FILE, svg)
 
-console.log(`  Write SVG to ${svgFilePath}`)
-writeFileSyncRecursive(svgFilePath, svg)
-
-console.log(`  Write cache to ${cacheFilePath}`)
-writeFileSyncRecursive(cacheFilePath, JSON.stringify(stargazerDates.dates.map((d) => d.getTime())))
-
-// Set GitHub Actions outputs
-if (process.env.GITHUB_OUTPUT) {
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `svg-file=${svgFilePath}\n`)
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `cache-file=${cacheFilePath}\n`)
-}
+console.log(`  Write cache to ${CACHE_FILE}`)
+fs.writeFileSync(CACHE_FILE, JSON.stringify(stargazerDates.dates.map((d) => d.getTime())))
 
 // --- main end ---------------------------------------------------------------
 
@@ -177,22 +168,16 @@ async function getStargazerIterator(repository) {
 // --- Cache -------------------------------------------------------------------
 
 async function loadStargazerDates() {
-    const cacheFile = input.cacheFile
-    if (!cacheFile || !fs.existsSync(cacheFile)) {
+    if (!fs.existsSync(CACHE_FILE)) {
         return {dates: []}
     }
 
-    const content = fs.readFileSync(cacheFile, 'utf-8')
+    const content = fs.readFileSync(CACHE_FILE, 'utf-8')
     const dates = JSON.parse(content).map((d) => new Date(d))
     return {dates}
 }
 
 // --- Utils -------------------------------------------------------------------
-
-function writeFileSyncRecursive(filename, content = '') {
-    fs.mkdirSync(path.dirname(filename), {recursive: true})
-    fs.writeFileSync(filename, content)
-}
 
 async function* wrapAsyncIteratorWithMapping(asyncIterator, mapFn) {
     for await (const value of asyncIterator) {

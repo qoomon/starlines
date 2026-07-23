@@ -57,9 +57,6 @@ const svg = createSvg(stargazerDates.dates)
 console.log(`  Write SVG to ${SVG_FILE}`)
 fs.writeFileSync(SVG_FILE, svg)
 
-console.log(`  Write cache to ${CACHE_FILE}`)
-fs.writeFileSync(CACHE_FILE, JSON.stringify(stargazerDates.dates.map((d) => d.getTime())))
-
 // --- main end ---------------------------------------------------------------
 
 async function getStargazerDates(resource) {
@@ -103,6 +100,9 @@ async function getStargazerDates(resource) {
     const allDates = fetchedStargazerDates.concat(stargazerCache.dates)
     console.log(`    ${allDates.length} stargazers total` +
         (allDates.length > 0 ? ` (latest: ${allDates[0].toISOString().split('T')[0]})` : ''))
+
+    console.log(`  Store stargazers cache to ${CACHE_FILE}`)
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(allDates.map((d) => d.getTime())))
 
     return {
         cached: stargazerCache.dates.length,

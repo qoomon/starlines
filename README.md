@@ -29,13 +29,15 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+           ref: starlines
 
       - uses: qoomon/starlines@main
 
       - uses: qoomon/actions--setup-git@v1
       - run: |
-          git add starline.svg starline-cache.json
+          git add starlines
           git commit -m "chore: update starline" || true
           git push 
 ```

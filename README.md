@@ -31,18 +31,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate starline
-        uses: qoomon/starlines@main
-        with:
-          resource: owner/repo           # or owner/gist-id@gist for gists
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: qoomon/starlines@main
 
-      - name: Commit outputs
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - uses: qoomon/actions--setup-git@v1
+      - run: |
           git add starline.svg starline-cache.json
-          git commit -m "update starline" && git push || true
+          git commit -m "chore: update starline" || true
+          git push 
 ```
 
 The action writes `starline.svg` and `starline-cache.json` directly to the workspace root. If `starline-cache.json` already exists (e.g. committed from a previous run), it is used to resume incremental fetching.

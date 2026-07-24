@@ -12,10 +12,11 @@ import {
 
 const input = {
     resource: process.argv[2],
+    outputRoot: process.argv[3] || './',
 }
 
 if (!input.resource) {
-    console.error('Usage: node create-starline.js <owner/repo|owner/gist-id@gist>')
+    console.error('Usage: node create-starline.js <owner/repo|owner/gist-id@gist> [output-root]')
     process.exit(1)
 }
 
@@ -24,8 +25,8 @@ const inputResourceParts = input.resource.split('/');
 inputResourceParts[0] = await getLogin(inputResourceParts[0]);
 input.resource = inputResourceParts.join('/');
 
-// output folder: owner/repo or owner/gist-id@gist
-const OUTPUT_DIR = input.resource
+// output folder: <output-root>/owner/repo or <output-root>/owner/gist-id (strip @gist suffix)
+const OUTPUT_DIR = `${input.outputRoot.replace(/\/$/, '')}/${input.resource.replace(/@gist$/, '')}`
 const CACHE_FILE = `${OUTPUT_DIR}/starline-cache.json`
 const SVG_FILE = `${OUTPUT_DIR}/starline.svg`
 

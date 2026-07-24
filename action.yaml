@@ -6,6 +6,10 @@ inputs:
     description: 'GitHub repository (owner/repo) or gist (owner/gist-id@gist)'
     required: false
     default: ${{ github.repository }}
+  output-root:
+    description: 'Root folder for output files (default: ./)'
+    required: false
+    default: './'
   github-token:
     description: 'GitHub token with read access to the target repository or gist stargazers'
     required: true
@@ -26,5 +30,5 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
-      run: node ${{ github.action_path }}/create-starline.js "${{ inputs.resource }}"
+      run: node ${{ github.action_path }}/create-starline.js "${{ inputs.resource }}" "${{ inputs.output-root }}"
      

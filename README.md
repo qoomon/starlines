@@ -47,6 +47,7 @@ The action writes `starline.svg` and `starline-cache.json` into a subfolder name
 | Input | Required | Description |
 |---|---|---|
 | `resource` | ❌ | Repository (`owner/repo`) or gist (`owner/gist-id@gist`). Defaults to the caller repository. |
+| `output-root` | ❌ | Root folder for output files. Defaults to `./`. |
 | `github-token` | ✅ | GitHub token with read access to the target repository or gist stargazers |
 
 ## Sources

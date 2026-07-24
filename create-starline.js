@@ -52,38 +52,39 @@ const octokit = new Octokit({auth: process.env.GITHUB_TOKEN, throttle: OctokitTh
 
 // --- main start -------------------------------------------------------------
 
-const allDates = await getAllStargazerDates(input.resource)
-
-const svgFile = path.join(input.resource, SVG_FILE)
-console.log(`Create starline image from ${allDates.length} stargazers...`)
-const svg = createSvg(allDates)
-
-console.log(`  Write SVG to ${svgFile}`)
-fs.mkdirSync(path.dirname(svgFile), {recursive: true})
-fs.writeFileSync(svgFile, svg)
-
-// --- main end ---------------------------------------------------------------
-
-async function getAllStargazerDates(resource) {
-    let resources;
-    if (!resource.includes('/')) {
-        console.log(`Get ${resource} owner resources...`)
-        const repos = await getOwnerRepositories(resource);
-        const gists = await getOwnerGists(resource);
-        resources = [...repos, ...gists];
-        console.log(`  ${repos.length} repositories, ${gists.length} gists`)
-    } else {
-        resources = [resource];
-    }
+if (!input.resource.includes('/')) {
+    // owner resource: create a starline.svg for each of the owner's
+    // repositories/gists, plus an aggregated starline.svg for the owner
+    console.log(`Get ${input.resource} owner resources...`)
+    const repos = await getOwnerRepositories(input.resource);
+    const gists = await getOwnerGists(input.resource);
+    const resources = [...repos, ...gists];
+    console.log(`  ${repos.length} repositories, ${gists.length} gists`)
 
     const allDates = []
-    for (const res of resources) {
-        const result = await getStargazerDates(res)
+    for (const resource of resources) {
+        const result = await getStargazerDates(resource)
         allDates.push(...result.dates)
+        writeSvg(resource, result.dates)
     }
 
     allDates.sort((a, b) => b - a)
-    return allDates
+    writeSvg(input.resource, allDates)
+} else {
+    const result = await getStargazerDates(input.resource)
+    writeSvg(input.resource, result.dates)
+}
+
+// --- main end ---------------------------------------------------------------
+
+function writeSvg(resource, dates) {
+    const svgFile = path.join(resource, SVG_FILE)
+    console.log(`Create starline image from ${dates.length} stargazers...`)
+    const svg = createSvg(dates)
+
+    console.log(`  Write SVG to ${svgFile}`)
+    fs.mkdirSync(path.dirname(svgFile), {recursive: true})
+    fs.writeFileSync(svgFile, svg)
 }
 
 async function getStargazerDates(resource) {

@@ -3,7 +3,7 @@ description: 'Generate a starline SVG for a GitHub repository or gist'
 
 inputs:
   resource:
-    description: 'GitHub repository (owner/repo) or gist (owner/gist-id@gist)'
+    description: 'GitHub owner (owner), repository (owner/repo), or gist (owner/gist-id@gist)'
     required: false
     default: ${{ github.repository }}
   output-directory:

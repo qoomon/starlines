@@ -24,8 +24,8 @@ const inputResourceParts = input.resource.split('/');
 inputResourceParts[0] = await getLogin(inputResourceParts[0]);
 input.resource = inputResourceParts.join('/');
 
-// output folder: owner/repo or owner/gist-id (strip @gist suffix)
-const OUTPUT_DIR = input.resource.replace(/@gist$/, '')
+// output folder: owner/repo or owner/gist-id@gist
+const OUTPUT_DIR = input.resource
 const CACHE_FILE = `${OUTPUT_DIR}/starline-cache.json`
 const SVG_FILE = `${OUTPUT_DIR}/starline.svg`
 

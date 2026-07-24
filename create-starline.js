@@ -145,9 +145,6 @@ async function getStargazerIterator(repository) {
     // gist
     if (repository.endsWith('@gist')) {
         repository = repository.replace(/@gist$/, '');
-        if (!await gistExists(repository)) {
-            throw new Error(`Gist ${repository} not found`)
-        }
         const repositoryObject = parseRepository(repository);
         return wrapAsyncIteratorWithMapping(octokit.graphql.paginate.iterator(`
                 query paginate ($gist: String!, $cursor: String) {

@@ -4,7 +4,12 @@ description: 'Generate a starline SVG for a GitHub repository or gist'
 inputs:
   resource:
     description: 'GitHub repository (owner/repo) or gist (owner/gist-id@gist)'
-    required: true
+    required: false
+    default: ${{ github.repository }}
+  output-directory:
+    description: 'Relative output directory for output files'
+    required: false
+    default: 'starlines'
   github-token:
     description: 'GitHub token with read access to the target repository or gist stargazers'
     required: true
@@ -21,9 +26,11 @@ runs:
       shell: bash
       run: npm ci
 
-    - working-directory: ${{ github.workspace }}
+    - shell: bash
+      run: mkdir -p "${{ github.workspace }}/${{ inputs.output-root }}"
+
+    - working-directory: ${{ github.workspace }}/${{ inputs.output-root }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: node ${{ github.action_path }}/create-starline.js "${{ inputs.resource }}"
-     

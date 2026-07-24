@@ -16,6 +16,8 @@ jobs:
            ref: starlines
 
       - uses: qoomon/starlines@main
+        with:
+          output-directory: ./
 
       - uses: qoomon/actions--setup-git@v1
       - run: |

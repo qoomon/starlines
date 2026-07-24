@@ -48,7 +48,7 @@ The action writes `starline.svg` and `starline-cache.json` directly to the works
 
 | Input | Required | Description |
 |---|---|---|
-| `resource` | ✅ | Repository (`owner/repo`) or gist (`owner/gist-id@gist`) |
+| `resource` | ✅ | Owner (`owner`), repository (`owner/repo`), or gist (`owner/gist-id@gist`). When only an owner is specified, stars from all their repositories and gists are combined. |
 | `github-token` | ✅ | GitHub token with read access to the target repository or gist stargazers |
 
 ## Sources

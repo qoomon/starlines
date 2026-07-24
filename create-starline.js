@@ -6,6 +6,8 @@ import {createSvg} from "./starline-svg.js";
 import * as fs from "node:fs";
 import {
     getLogin,
+    getOwnerRepositories,
+    getOwnerGists,
     gistExists,
     parseRepository,
 } from "./lib/github.js";
@@ -18,7 +20,7 @@ const input = {
 }
 
 if (!input.resource) {
-    console.error('Usage: node create-starline.js <owner/repo|owner/gist-id@gist>')
+    console.error('Usage: node create-starline.js <owner|owner/repo|owner/gist-id@gist>')
     process.exit(1)
 }
 
@@ -72,28 +74,44 @@ async function getStargazerDates(resource) {
 
     const fetchedStargazerDates = []
 
-    console.log(`  Fetch stargazers...`)
-    for await (const stargazersBatch of await getStargazerIterator(resource)) {
-        let stopIterating = false
+    let resources;
+    if (!resource.includes('/')) {
+        console.log(`  Fetch owner resources...`)
+        const repos = await getOwnerRepositories(resource);
+        const gists = await getOwnerGists(resource);
+        resources = [...repos, ...gists];
+        console.log(`    ${repos.length} repositories, ${gists.length} gists`)
+    } else {
+        resources = [resource];
+    }
 
-        const starredAtDates = stargazersBatch.edges.map(({starredAt}) => new Date(starredAt))
-        for (const starredAtDate of starredAtDates) {
-            if (stargazerCache.dates[0] && starredAtDate <= stargazerCache.dates[0]) {
-                stopIterating = true
+    console.log(`  Fetch stargazers...`)
+    for (const res of resources) {
+        if (resources.length > 1) {
+            console.log(`  - ${res}`)
+        }
+        for await (const stargazersBatch of await getStargazerIterator(res)) {
+            let stopIterating = false
+
+            const starredAtDates = stargazersBatch.edges.map(({starredAt}) => new Date(starredAt))
+            for (const starredAtDate of starredAtDates) {
+                if (stargazerCache.dates[0] && starredAtDate <= stargazerCache.dates[0]) {
+                    stopIterating = true
+                    break;
+                }
+                fetchedStargazerDates.push(starredAtDate);
+            }
+
+            const fetchedStargazersCount = fetchedStargazerDates.length;
+            const stargazersToFetch = stargazersBatch.totalCount - stargazerCache.dates.length;
+            const stargazersFetchProgress = stargazersToFetch <= 0 ? 1
+                : fetchedStargazersCount / stargazersToFetch;
+
+            console.log(`    ${String(Math.round(stargazersFetchProgress * 100)).padStart(3, ' ')}%  (${String(fetchedStargazersCount).padStart(stargazersToFetch.toString().length, ' ')}/${stargazersToFetch})`)
+
+            if (stopIterating) {
                 break;
             }
-            fetchedStargazerDates.push(starredAtDate);
-        }
-
-        const fetchedStargazersCount = fetchedStargazerDates.length;
-        const stargazersToFetch = stargazersBatch.totalCount - stargazerCache.dates.length;
-        const stargazersFetchProgress = stargazersToFetch <= 0 ? 1
-            : fetchedStargazersCount / stargazersToFetch;
-
-        console.log(`    ${String(Math.round(stargazersFetchProgress * 100)).padStart(3, ' ')}%  (${String(fetchedStargazersCount).padStart(stargazersToFetch.toString().length, ' ')}/${stargazersToFetch})`)
-
-        if (stopIterating) {
-            break;
         }
     }
 

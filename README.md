@@ -9,7 +9,7 @@ Generates stargazer history badges (SVGs) for GitHub repositories and gists.
 > The starline x-axis is scaled logarithmically and the y-axis is scaled by square root.
 
 ## Example
-![starline](https://raw.githubusercontent.com/qoomon/starlines/assets/qoomon/starlines/starline.svg)
+![starline](https://raw.githubusercontent.com/qoomon/starlines/refs/heads/starlines/qoomon/starlines/starline.svg)
 
 ## Usage
 

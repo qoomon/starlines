@@ -21,6 +21,6 @@ jobs:
 
       - uses: qoomon/actions--setup-git@v1
       - run: |
-          git add starlines
+          git add .
           git commit -m "chore: update starline" || true
           git push 

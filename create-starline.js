@@ -4,6 +4,7 @@ import {paginateGraphQL} from "@octokit/plugin-paginate-graphql";
 import {throttling} from "@octokit/plugin-throttling";
 import {createSvg} from "./starline-svg.js";
 import * as fs from "node:fs";
+import * as path from "node:path";
 import {
     getLogin,
     getOwnerRepositories,
@@ -51,21 +52,47 @@ const octokit = new Octokit({auth: process.env.GITHUB_TOKEN, throttle: OctokitTh
 
 // --- main start -------------------------------------------------------------
 
-const stargazerDates = await getStargazerDates(input.resource)
+const allDates = await getAllStargazerDates(input.resource)
 
-console.log(`Create starline image from ${stargazerDates.dates.length} stargazers...`)
-const svg = createSvg(stargazerDates.dates)
+const svgFile = path.join(input.resource, SVG_FILE)
+console.log(`Create starline image from ${allDates.length} stargazers...`)
+const svg = createSvg(allDates)
 
-console.log(`  Write SVG to ${SVG_FILE}`)
-fs.writeFileSync(SVG_FILE, svg)
+console.log(`  Write SVG to ${svgFile}`)
+fs.mkdirSync(path.dirname(svgFile), {recursive: true})
+fs.writeFileSync(svgFile, svg)
 
 // --- main end ---------------------------------------------------------------
+
+async function getAllStargazerDates(resource) {
+    let resources;
+    if (!resource.includes('/')) {
+        console.log(`Get ${resource} owner resources...`)
+        const repos = await getOwnerRepositories(resource);
+        const gists = await getOwnerGists(resource);
+        resources = [...repos, ...gists];
+        console.log(`  ${repos.length} repositories, ${gists.length} gists`)
+    } else {
+        resources = [resource];
+    }
+
+    const allDates = []
+    for (const res of resources) {
+        const result = await getStargazerDates(res)
+        allDates.push(...result.dates)
+    }
+
+    allDates.sort((a, b) => b - a)
+    return allDates
+}
 
 async function getStargazerDates(resource) {
     console.log(`Get ${resource} stargazers...`)
 
+    const cacheFile = path.join(resource, CACHE_FILE)
+
     console.log(`  Load stargazers cache...`)
-    const stargazerCache = await loadStargazerDates()
+    const stargazerCache = await loadStargazerDates(cacheFile)
     if (stargazerCache.dates.length > 0) {
         console.log(`    ${stargazerCache.dates.length} stargazers (latest: ${stargazerCache.dates[0].toISOString().split('T')[0]})`)
     } else {
@@ -74,44 +101,28 @@ async function getStargazerDates(resource) {
 
     const fetchedStargazerDates = []
 
-    let resources;
-    if (!resource.includes('/')) {
-        console.log(`  Fetch owner resources...`)
-        const repos = await getOwnerRepositories(resource);
-        const gists = await getOwnerGists(resource);
-        resources = [...repos, ...gists];
-        console.log(`    ${repos.length} repositories, ${gists.length} gists`)
-    } else {
-        resources = [resource];
-    }
-
     console.log(`  Fetch stargazers...`)
-    for (const res of resources) {
-        if (resources.length > 1) {
-            console.log(`  - ${res}`)
-        }
-        for await (const stargazersBatch of await getStargazerIterator(res)) {
-            let stopIterating = false
+    for await (const stargazersBatch of await getStargazerIterator(resource)) {
+        let stopIterating = false
 
-            const starredAtDates = stargazersBatch.edges.map(({starredAt}) => new Date(starredAt))
-            for (const starredAtDate of starredAtDates) {
-                if (stargazerCache.dates[0] && starredAtDate <= stargazerCache.dates[0]) {
-                    stopIterating = true
-                    break;
-                }
-                fetchedStargazerDates.push(starredAtDate);
-            }
-
-            const fetchedStargazersCount = fetchedStargazerDates.length;
-            const stargazersToFetch = stargazersBatch.totalCount - stargazerCache.dates.length;
-            const stargazersFetchProgress = stargazersToFetch <= 0 ? 1
-                : fetchedStargazersCount / stargazersToFetch;
-
-            console.log(`    ${String(Math.round(stargazersFetchProgress * 100)).padStart(3, ' ')}%  (${String(fetchedStargazersCount).padStart(stargazersToFetch.toString().length, ' ')}/${stargazersToFetch})`)
-
-            if (stopIterating) {
+        const starredAtDates = stargazersBatch.edges.map(({starredAt}) => new Date(starredAt))
+        for (const starredAtDate of starredAtDates) {
+            if (stargazerCache.dates[0] && starredAtDate <= stargazerCache.dates[0]) {
+                stopIterating = true
                 break;
             }
+            fetchedStargazerDates.push(starredAtDate);
+        }
+
+        const fetchedStargazersCount = fetchedStargazerDates.length;
+        const stargazersToFetch = stargazersBatch.totalCount - stargazerCache.dates.length;
+        const stargazersFetchProgress = stargazersToFetch <= 0 ? 1
+            : fetchedStargazersCount / stargazersToFetch;
+
+        console.log(`    ${String(Math.round(stargazersFetchProgress * 100)).padStart(3, ' ')}%  (${String(fetchedStargazersCount).padStart(stargazersToFetch.toString().length, ' ')}/${stargazersToFetch})`)
+
+        if (stopIterating) {
+            break;
         }
     }
 
@@ -119,8 +130,9 @@ async function getStargazerDates(resource) {
     console.log(`    ${allDates.length} stargazers total` +
         (allDates.length > 0 ? ` (latest: ${allDates[0].toISOString().split('T')[0]})` : ''))
 
-    console.log(`  Store stargazers cache to ${CACHE_FILE}`)
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(allDates.map((d) => d.getTime())))
+    console.log(`  Store stargazers cache to ${cacheFile}`)
+    fs.mkdirSync(path.dirname(cacheFile), {recursive: true})
+    fs.writeFileSync(cacheFile, JSON.stringify(allDates.map((d) => d.getTime())))
 
     return {
         cached: stargazerCache.dates.length,
@@ -184,12 +196,12 @@ async function getStargazerIterator(repository) {
 
 // --- Cache -------------------------------------------------------------------
 
-async function loadStargazerDates() {
-    if (!fs.existsSync(CACHE_FILE)) {
+async function loadStargazerDates(cacheFile) {
+    if (!fs.existsSync(cacheFile)) {
         return {dates: []}
     }
 
-    const content = fs.readFileSync(CACHE_FILE, 'utf-8')
+    const content = fs.readFileSync(cacheFile, 'utf-8')
     const dates = JSON.parse(content).map((d) => new Date(d))
     return {dates}
 }

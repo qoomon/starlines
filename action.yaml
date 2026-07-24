@@ -26,9 +26,12 @@ runs:
       shell: bash
       run: npm ci
 
-    - working-directory: ${{ github.workspace }}
+    - shell: bash
+      run: mkdir -p "${{ github.workspace }}/${{ inputs.output-root }}"
+
+    - working-directory: ${{ github.workspace }}/${{ inputs.output-root }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
-      run: node ${{ github.action_path }}/create-starline.js "${{ inputs.resource }}" "${{ inputs.output-root }}"
+      run: node ${{ github.action_path }}/create-starline.js "${{ inputs.resource }}"
      

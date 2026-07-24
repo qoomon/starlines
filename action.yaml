@@ -27,9 +27,9 @@ runs:
       run: npm ci
 
     - shell: bash
-      run: mkdir -p "${{ github.workspace }}/${{ inputs.output-root }}"
+      run: mkdir -p "${{ github.workspace }}/${{ inputs.output-directory }}"
 
-    - working-directory: ${{ github.workspace }}/${{ inputs.output-root }}
+    - working-directory: ${{ github.workspace }}/${{ inputs.output-directory }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}

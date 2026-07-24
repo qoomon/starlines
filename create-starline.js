@@ -9,7 +9,6 @@ import {
     getLogin,
     getOwnerRepositories,
     getOwnerGists,
-    gistExists,
     parseRepository,
 } from "./lib/github.js";
 

@@ -4,18 +4,22 @@ import {paginateGraphQL} from "@octokit/plugin-paginate-graphql";
 import {throttling} from "@octokit/plugin-throttling";
 import {createSvg} from "./starline-svg.js";
 import * as fs from "node:fs";
-import * as path from "node:path";
 import {
     getLogin,
     gistExists,
     parseRepository,
-    getGitHubFileMeta,
-    downloadGitHubFile,
 } from "./lib/github.js";
-import starlineConfig from "./config.js";
+
+const CACHE_FILE = 'starline-cache.json'
+const SVG_FILE = 'starline.svg'
 
 const input = {
-    resource: process.argv[2]
+    resource: process.argv[2],
+}
+
+if (!input.resource) {
+    console.error('Usage: node create-starline.js <owner/repo|owner/gist-id@gist>')
+    process.exit(1)
 }
 
 // normalize resource name
@@ -31,20 +35,17 @@ const Octokit = _Octokit
 const OctokitThrottle = {
     onRateLimit: (retryAfter, options, octokit, retryCount) => {
         octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`,);
-
         if (retryCount < 1) {
-            // only retries once
             octokit.log.info(`Retrying after ${retryAfter} seconds!`);
             return true;
         }
-    }, onSecondaryRateLimit: (retryAfter, options, octokit) => {
-        // does not retry, only logs a warning
+    },
+    onSecondaryRateLimit: (retryAfter, options, octokit) => {
         octokit.log.warn(`SecondaryRateLimit detected for request ${options.method} ${options.url}`,);
     },
 }
 
 const octokit = new Octokit({auth: process.env.GITHUB_TOKEN, throttle: OctokitThrottle})
-const octokitGist = new Octokit({auth: process.env.GIST_GITHUB_TOKEN, throttle: OctokitThrottle})
 
 // --- main start -------------------------------------------------------------
 
@@ -52,47 +53,17 @@ const stargazerDates = await getStargazerDates(input.resource)
 
 console.log(`Create starline image from ${stargazerDates.dates.length} stargazers...`)
 const svg = createSvg(stargazerDates.dates)
-const svgFileName = `${input.resource}/${starlineConfig.files.image.name}`
 
-// store image to local file system
-const svgFileNameLocal = 'starlines/' + svgFileName
-console.log('  Write to ' + svgFileNameLocal)
-writeFileSyncRecursive(svgFileNameLocal, svg)
+console.log(`  Write SVG to ${SVG_FILE}`)
+fs.writeFileSync(SVG_FILE, svg)
 
 // --- main end ---------------------------------------------------------------
 
 async function getStargazerDates(resource) {
     console.log(`Get ${resource} stargazers...`)
 
-    const resourceParts = resource.split('/');
-
-    // user
-    if (resourceParts.length === 1) {
-        let user = resourceParts[0]
-        let cached = 0
-        let fetched = 0
-        let dates = []
-
-        for (const repository of await getUserRepositories(user)) {
-            const stargazerDates = await getStargazerDates(repository)
-                .catch((error) => {
-                    console.error(error)
-                    return {cached: 0, fetched: 0, dates: []}
-                })
-            cached += stargazerDates.cached
-            fetched += stargazerDates.fetched
-            dates = dates.concat(stargazerDates.dates)
-        }
-        return {
-            cached,
-            fetched,
-            dates,
-        }
-    }
-
-    // repository
     console.log(`  Load stargazers cache...`)
-    const stargazerCache = await loadStargazerDates(resource)
+    const stargazerCache = await loadStargazerDates()
     if (stargazerCache.dates.length > 0) {
         console.log(`    ${stargazerCache.dates.length} stargazers (latest: ${stargazerCache.dates[0].toISOString().split('T')[0]})`)
     } else {
@@ -107,7 +78,7 @@ async function getStargazerDates(resource) {
 
         const starredAtDates = stargazersBatch.edges.map(({starredAt}) => new Date(starredAt))
         for (const starredAtDate of starredAtDates) {
-            if (starredAtDate <= stargazerCache.dates[0]) {
+            if (stargazerCache.dates[0] && starredAtDate <= stargazerCache.dates[0]) {
                 stopIterating = true
                 break;
             }
@@ -115,7 +86,7 @@ async function getStargazerDates(resource) {
         }
 
         const fetchedStargazersCount = fetchedStargazerDates.length;
-        const stargazersToFetch = stargazersBatch.totalCount - (stargazerCache.dates?.length);
+        const stargazersToFetch = stargazersBatch.totalCount - stargazerCache.dates.length;
         const stargazersFetchProgress = stargazersToFetch <= 0 ? 1
             : fetchedStargazersCount / stargazersToFetch;
 
@@ -126,30 +97,29 @@ async function getStargazerDates(resource) {
         }
     }
 
-    const stargazerDates = fetchedStargazerDates.concat(stargazerCache.dates)
-    console.log(`  Store stargazers cache...`)
-    await storeStargazerDates(resource, stargazerDates)
-    console.log(`    ${stargazerDates.length} stargazers` +
-        (stargazerDates.length > 0 ? ` (latest: ${stargazerDates[0].toISOString().split('T')[0]})` : ''))
+    const allDates = fetchedStargazerDates.concat(stargazerCache.dates)
+    console.log(`    ${allDates.length} stargazers total` +
+        (allDates.length > 0 ? ` (latest: ${allDates[0].toISOString().split('T')[0]})` : ''))
 
+    console.log(`  Store stargazers cache to ${CACHE_FILE}`)
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(allDates.map((d) => d.getTime())))
 
     return {
         cached: stargazerCache.dates.length,
         fetched: fetchedStargazerDates.length,
-        dates: stargazerDates,
+        dates: allDates,
     }
 }
 
 async function getStargazerIterator(repository) {
     // gist
     if (repository.endsWith('@gist')) {
-        console.log(`    Repository found...`)
         repository = repository.replace(/@gist$/, '');
         if (!await gistExists(repository)) {
             throw new Error(`Gist ${repository} not found`)
         }
         const repositoryObject = parseRepository(repository);
-        return wrapAsyncIteratorWithMapping(octokitGist.graphql.paginate.iterator(`
+        return wrapAsyncIteratorWithMapping(octokit.graphql.paginate.iterator(`
                 query paginate ($gist: String!, $cursor: String) {
                   viewer {
                     gist(name: $gist) {
@@ -186,7 +156,7 @@ async function getStargazerIterator(repository) {
                           endCursor
                         }
                       }
-                    }   
+                    }
                   }
                 }`, {
         owner: repositoryObject.owner,
@@ -194,103 +164,22 @@ async function getStargazerIterator(repository) {
     }), (res) => res.repositoryOwner.repository.stargazers)
 }
 
-async function getUserRepositories(user) {
-    let result = []
+// --- Cache -------------------------------------------------------------------
 
-    const repositories = await octokit.graphql.paginate(`
-        query paginate ($owner: String!, $cursor: String) {
-          repositoryOwner(login: $owner) {
-            repositories(ownerAffiliations:[OWNER], first: 100, after: $cursor) {
-              nodes {
-                name
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            } 
-          }
-        }`, {
-        owner: user,
-    }).then((data) => data.repositoryOwner.repositories.nodes.map(({name}) => `${user}/${name}`))
-
-    result = result.concat(repositories)
-
-    const gists = await octokitGist.graphql.paginate(`
-        query paginate ($user: String!, $cursor: String) {
-          user(login: $user) {
-            gists(first: 100, after: $cursor) {
-              nodes {
-                name
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        }`, {
-        user,
-    }).then((data) => data.user.gists.nodes.map(({name}) => `${user}/${name}@gist`))
-
-    result = result.concat(gists)
-
-    return result
-}
-
-// --- Stargazer Store ---------------------------------------------------
-
-async function storeStargazerDates(resource, dates) {
-    const fileName = `${resource}/${starlineConfig.files.dates.name}`
-    let fileData = dates.map((date) => date.getTime())
-    fileData = JSON.stringify(fileData)
-
-    // local file store
-    writeFileSyncRecursive('starlines/' + fileName, fileData)
-}
-
-/**
- * Load dates
- * @param resource
- * @returns {Promise<{dates: Date[], age: number}>}
- */
-async function loadStargazerDates(resource) {
-    const datesMeta = await getGitHubFileMeta(octokit, {
-        ...starlineConfig.repository,
-        ref: starlineConfig.cache.branch,
-        path: `${resource}/${starlineConfig.files.dates.name}`,
-    })
-  
-    if (!datesMeta) {
-        return {
-            dates: [],
-            age: Infinity,
-        }
+async function loadStargazerDates() {
+    if (!fs.existsSync(CACHE_FILE)) {
+        return {dates: []}
     }
-   
-    const dates = await downloadGitHubFile({
-        ...starlineConfig.repository,
-        ref: starlineConfig.cache.branch,
-        path: `${resource}/${starlineConfig.files.dates.name}`,
-    }).then((data) => new TextDecoder().decode(data)).then((content) => JSON.parse(content))
-   
-    return {
-        dates: dates.map((date) => new Date(date)),
-        lastModified: datesMeta.lastModified,
-    }
+
+    const content = fs.readFileSync(CACHE_FILE, 'utf-8')
+    const dates = JSON.parse(content).map((d) => new Date(d))
+    return {dates}
 }
 
 // --- Utils -------------------------------------------------------------------
-
-function writeFileSyncRecursive(filename, content = '') {
-    fs.mkdirSync(path.dirname(filename), {recursive: true})
-    fs.writeFileSync(filename, content)
-}
 
 async function* wrapAsyncIteratorWithMapping(asyncIterator, mapFn) {
     for await (const value of asyncIterator) {
         yield await mapFn(value);
     }
 }
-
-

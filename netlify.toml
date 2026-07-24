@@ -1,7 +1,0 @@
-[build]
-    edge_functions = "api"
-
-[[redirects]]
-    from = "/"
-    to = "https://github.com/qoomon/starlines"
-

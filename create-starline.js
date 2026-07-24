@@ -10,9 +10,6 @@ import {
     parseRepository,
 } from "./lib/github.js";
 
-const CACHE_FILE = 'starline-cache.json'
-const SVG_FILE = 'starline.svg'
-
 const input = {
     resource: process.argv[2],
 }
@@ -26,6 +23,13 @@ if (!input.resource) {
 const inputResourceParts = input.resource.split('/');
 inputResourceParts[0] = await getLogin(inputResourceParts[0]);
 input.resource = inputResourceParts.join('/');
+
+// output folder: owner/repo or owner/gist-id (strip @gist suffix)
+const OUTPUT_DIR = input.resource.replace(/@gist$/, '')
+const CACHE_FILE = `${OUTPUT_DIR}/starline-cache.json`
+const SVG_FILE = `${OUTPUT_DIR}/starline.svg`
+
+fs.mkdirSync(OUTPUT_DIR, {recursive: true})
 
 const Octokit = _Octokit
     .plugin(throttling)

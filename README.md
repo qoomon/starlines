@@ -35,18 +35,18 @@ jobs:
 
       - uses: qoomon/actions--setup-git@v1
       - run: |
-          git add starline.svg starline-cache.json
+          git add ${{ github.repository }}/starline.svg ${{ github.repository }}/starline-cache.json
           git commit -m "chore: update starline" || true
           git push 
 ```
 
-The action writes `starline.svg` and `starline-cache.json` directly to the workspace root. If `starline-cache.json` already exists (e.g. committed from a previous run), it is used to resume incremental fetching.
+The action writes `starline.svg` and `starline-cache.json` into a subfolder named after the resource (e.g. `owner/repo/starline.svg`). If `starline-cache.json` already exists (e.g. committed from a previous run), it is used to resume incremental fetching.
 
 ### Inputs
 
 | Input | Required | Description |
 |---|---|---|
-| `resource` | ✅ | Repository (`owner/repo`) or gist (`owner/gist-id@gist`) |
+| `resource` | ❌ | Repository (`owner/repo`) or gist (`owner/gist-id@gist`). Defaults to the caller repository. |
 | `github-token` | ✅ | GitHub token with read access to the target repository or gist stargazers |
 
 ## Sources

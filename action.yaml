@@ -4,7 +4,8 @@ description: 'Generate a starline SVG for a GitHub repository or gist'
 inputs:
   resource:
     description: 'GitHub repository (owner/repo) or gist (owner/gist-id@gist)'
-    required: true
+    required: false
+    default: ${{ github.repository }}
   github-token:
     description: 'GitHub token with read access to the target repository or gist stargazers'
     required: true

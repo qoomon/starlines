@@ -154,7 +154,7 @@ async function getStargazerIterator(repository) {
                 query paginate ($gist: String!, $cursor: String) {
                   viewer {
                     gist(name: $gist) {
-                      stargazers(last: 100}, before: $cursor) {
+                      stargazers(last: 100, before: $cursor) {
                         totalCount
                         edges {
                           starredAt

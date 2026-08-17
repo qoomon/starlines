@@ -62,9 +62,13 @@ if (!input.resource.includes('/')) {
 
     const allDates = []
     for (const resource of resources) {
-        const result = await getStargazerDates(resource)
-        allDates.push(...result.dates)
-        writeSvg(resource, result.dates)
+        try {
+            const result = await getStargazerDates(resource)
+            allDates.push(...result.dates)
+            writeSvg(resource, result.dates)
+        } catch (error) {
+            console.error(`  Error processing ${resource}, skipping: ${error.message}`)
+        }
     }
 
     allDates.sort((a, b) => b - a)

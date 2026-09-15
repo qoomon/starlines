@@ -109,7 +109,9 @@ async function getStargazerDates(resource) {
     for await (const stargazersBatch of await getStargazerIterator(resource)) {
         let stopIterating = false
 
-        const starredAtDates = stargazersBatch.edges.map(({starredAt}) => new Date(starredAt))
+        const starredAtDates = stargazersBatch.edges
+            .map(({starredAt}) => new Date(starredAt))
+            .sort((a, b) => b - a)
         for (const starredAtDate of starredAtDates) {
             if (stargazerCache.dates[0] && starredAtDate <= stargazerCache.dates[0]) {
                 stopIterating = true
@@ -130,7 +132,9 @@ async function getStargazerDates(resource) {
         }
     }
 
-    const allDates = fetchedStargazerDates.concat(stargazerCache.dates)
+    const allDates = fetchedStargazerDates
+        .concat(stargazerCache.dates)
+        .sort((a, b) => b - a)
     console.log(`    ${allDates.length} stargazers total` +
         (allDates.length > 0 ? ` (latest: ${allDates[0].toISOString().split('T')[0]})` : ''))
 
@@ -203,7 +207,9 @@ async function loadStargazerDates(cacheFile) {
     }
 
     const content = fs.readFileSync(cacheFile, 'utf-8')
-    const dates = JSON.parse(content).map((d) => new Date(d))
+    const dates = JSON.parse(content)
+        .map((d) => new Date(d))
+        .sort((a, b) => b - a)
     return {dates}
 }
 

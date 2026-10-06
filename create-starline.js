@@ -24,9 +24,20 @@ if (!input.resource) {
     process.exit(1)
 }
 
+// validate resource name (prevents path traversal and malformed API input)
+if (!/^[A-Za-z0-9-]+(\/[A-Za-z0-9._-]+(@gist)?)?$/.test(input.resource)
+    || input.resource.split('/').some((part) => part === '.' || part === '..')) {
+    console.error('Invalid resource')
+    process.exit(1)
+}
+
 // normalize resource name
 const inputResourceParts = input.resource.split('/');
 inputResourceParts[0] = await getLogin(inputResourceParts[0]);
+if (!inputResourceParts[0] || !/^[A-Za-z0-9-]+$/.test(inputResourceParts[0])) {
+    console.error('Unknown owner')
+    process.exit(1)
+}
 input.resource = inputResourceParts.join('/');
 
 const Octokit = _Octokit

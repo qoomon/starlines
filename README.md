@@ -1,6 +1,6 @@
 # GitHub Starlines
 
-> [!CAUTION]
+> [!NOTE]
 > Unfortunately [GitHub restricted access to stargazers](https://github.blog/changelog/2026-06-30-upcoming-access-restrictions-to-public-api-endpoints-and-ui-views/). The public endpoint is no longer available. Use the GitHub Action below to generate starlines for your own repositories.
 
 Generates stargazer history badges (SVGs) for GitHub repositories and gists.
